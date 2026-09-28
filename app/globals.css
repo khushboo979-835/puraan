@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700;1,800&family=Noto+Serif+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-heading: 'Playfair Display', 'Cinzel', serif;
+  --font-sanskrit: 'Noto Serif Devanagari', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --brand-saffron: #ea8913;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #ea8913;
+  background-image: radial-gradient(circle at 50% 0%, #f79928 0%, #ea8913 55%, #d47606 100%);
+  color: #000000;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+.font-heading {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Italic Accent Text */
+.gold-italic-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  color: #261100;
+  text-decoration: underline;
+  text-decoration-color: #522700;
+  text-underline-offset: 4px;
+}
+
+/* Hero Oval Frame on #ea8913 Background */
+.hero-oval-frame {
+  background: radial-gradient(ellipse at center, #ffebc9 0%, #ffd99e 60%, #ffc570 100%);
+  border: 2.5px solid #4a2600;
+  box-shadow: 0 15px 35px -5px rgba(54, 25, 0, 0.3), inset 0 0 35px rgba(255, 245, 220, 0.7);
+}
+
+/* Daily Shloka Card */
+.daily-shloka-card {
+  background: linear-gradient(135deg, #ffeecf 0%, #ffd999 50%, #ffc56b 100%);
+  border: 2px solid #4a2600;
+  box-shadow: 0 8px 25px -5px rgba(54, 25, 0, 0.25);
+}
+
+/* Action Buttons */
+.btn-dark-gold {
+  background: #1f0f00;
+  color: #ffd99e;
+  border: 1.5px solid #4a2600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+.btn-dark-gold:hover {
+  background: #381b00;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #d47606;
+}
+::-webkit-scrollbar-thumb {
+  background: #522700;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2b1400;
+}
