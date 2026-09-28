@@ -17,14 +17,14 @@ import {
   Bookmark,
   Languages,
   Type,
-  Sun,
-  Moon,
-  Compass,
   Check,
   Download,
-  Share2,
   Sliders,
-  Maximize2
+  Mic,
+  Music,
+  SkipForward,
+  SkipBack,
+  Volume1
 } from 'lucide-react';
 import AmbientSoundscape from './AmbientSoundscape';
 import UnlockCheckoutModal from './UnlockCheckoutModal';
@@ -80,27 +80,37 @@ export default function InteractiveReader({
   const router = useRouter();
   const { user, isPurchased } = useAuth();
 
-  // Audio Player State
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Mode: 'vocal' (Speaks text line by line using SpeechSynthesis) or 'instrumental' (Plays background mp3)
+  const [audioMode, setAudioMode] = useState<'vocal' | 'instrumental'>('vocal');
+  const [vocalVoiceContent, setVocalVoiceContent] = useState<'original' | 'hindi' | 'both'>('original');
+
+  // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(0.9); // Slightly calm devotional pace
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
-  const [audioLoaded, setAudioLoaded] = useState(false);
+
+  // Audio Ref for Instrumental Mode / Background Music
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   // Active Highlighted Verse
   const [activeSentenceId, setActiveSentenceId] = useState<string | null>(
     initialBookmark?.sentenceId || (chapter?.verses?.[0]?.sentenceId ?? null)
   );
 
+  // SpeechSynthesis Utterance Reference
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isPlayingRef = useRef(false);
+
   // Reader Settings & Themes
-  const [readingTheme, setReadingTheme] = useState<'dark' | 'sepia' | 'parchment' | 'midnight'>('dark');
+  const [readingTheme, setReadingTheme] = useState<'gold' | 'parchment' | 'dark' | 'sepia'>('gold');
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
   const [showHindi, setShowHindi] = useState(true);
   const [showEnglish, setShowEnglish] = useState(true);
-  const [showTransliteration, setShowTransliteration] = useState(false);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
 
   // Modals & UI Controls
@@ -111,98 +121,236 @@ export default function InteractiveReader({
   // Verse DOM references for smooth auto-scrolling
   const verseElementsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const isUnlocked = chapterNumber === 1 || (book?._id && isPurchased(book._id));
+  const verses = chapter?.verses || [];
 
-  // Determine current active verse based on audio currentTime
+  // Initialize SpeechSynthesis
   useEffect(() => {
-    if (!chapter?.verses || chapter.verses.length === 0) return;
-
-    const currentVerse = chapter.verses.find(
-      (v) => currentTime >= v.startTime && currentTime <= v.endTime + 0.3
-    );
-
-    if (currentVerse && currentVerse.sentenceId !== activeSentenceId) {
-      setActiveSentenceId(currentVerse.sentenceId);
-
-      // Smooth center scroll
-      if (autoScrollEnabled && verseElementsRef.current[currentVerse.sentenceId]) {
-        verseElementsRef.current[currentVerse.sentenceId]?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
     }
-  }, [currentTime, chapter?.verses, autoScrollEnabled, activeSentenceId]);
+    return () => {
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
+    };
+  }, []);
 
-  // Audio synchronization handlers
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+  // Sync ref with state
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Determine speech language code based on religion and content
+  const getSpeechLanguageCode = () => {
+    if (vocalVoiceContent === 'hindi') return 'hi-IN';
+    switch (book.religion) {
+      case 'Hinduism':
+      case 'Jainism':
+      case 'Buddhism':
+        return 'hi-IN';
+      case 'Sikhism':
+        return 'hi-IN'; // Or pa-IN if available
+      case 'Islam':
+        return 'ar-SA';
+      case 'Christianity':
+        return 'hi-IN';
+      default:
+        return 'hi-IN';
     }
   };
 
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-      setAudioLoaded(true);
-
-      // Resume from bookmark if available
-      if (initialBookmark?.audioTimestamp && initialBookmark.audioTimestamp > 0) {
-        audioRef.current.currentTime = initialBookmark.audioTimestamp;
-      }
-    }
+  // Find best speech synthesis voice (prefer Indian voices or Hindi/regional)
+  const getPreferredVoice = (langCode: string) => {
+    if (!synthRef.current) return null;
+    const allVoices = synthRef.current.getVoices();
+    const match =
+      allVoices.find((v) => v.lang.toLowerCase() === langCode.toLowerCase()) ||
+      allVoices.find((v) => v.lang.toLowerCase().startsWith('hi')) ||
+      allVoices.find((v) => v.lang.toLowerCase().includes('in')) ||
+      allVoices[0];
+    return match || null;
   };
 
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+  // Speak a specific verse by index in Vocal Mode
+  const speakVerse = (index: number) => {
+    if (!synthRef.current || index < 0 || index >= verses.length) {
       setIsPlaying(false);
+      return;
+    }
+
+    synthRef.current.cancel(); // Stop any currently playing utterance
+
+    const targetVerse = verses[index];
+    setCurrentVerseIndex(index);
+    setActiveSentenceId(targetVerse.sentenceId);
+
+    // Smooth auto-centering scroll
+    if (autoScrollEnabled && verseElementsRef.current[targetVerse.sentenceId]) {
+      verseElementsRef.current[targetVerse.sentenceId]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+
+    // Determine text to speak
+    let speechText = '';
+    if (vocalVoiceContent === 'original') {
+      speechText = targetVerse.originalScript;
+    } else if (vocalVoiceContent === 'hindi') {
+      speechText = targetVerse.hindiTranslation;
     } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((e) => {
-          console.warn('Audio playback error:', e);
-        });
+      // Both
+      speechText = `${targetVerse.originalScript}। भावार्थ: ${targetVerse.hindiTranslation}`;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(speechText);
+    const langCode = getSpeechLanguageCode();
+    utterance.lang = langCode;
+    utterance.rate = playbackRate;
+    utterance.pitch = 1.0;
+    utterance.volume = isMuted ? 0 : volume;
+
+    const voice = getPreferredVoice(langCode);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = () => {
+      setIsPlaying(true);
+    };
+
+    utterance.onend = () => {
+      // If still supposed to be playing, automatically proceed to the next verse
+      if (isPlayingRef.current) {
+        if (index + 1 < verses.length) {
+          setTimeout(() => {
+            speakVerse(index + 1);
+          }, 600); // Dignified pause between sacred verses
+        } else {
+          setIsPlaying(false);
+        }
+      }
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis notice:', e);
+      if (index + 1 < verses.length && isPlayingRef.current) {
+        setTimeout(() => speakVerse(index + 1), 1000);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    utteranceRef.current = utterance;
+    synthRef.current.speak(utterance);
+    saveBookmark(targetVerse.sentenceId, targetVerse.startTime);
+  };
+
+  // Toggle Play / Pause
+  const togglePlay = () => {
+    if (audioMode === 'vocal') {
+      if (isPlaying) {
+        if (synthRef.current) {
+          synthRef.current.cancel();
+        }
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+        speakVerse(currentVerseIndex);
+      }
+    } else {
+      // Instrumental Mode
+      if (!audioRef.current) return;
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch((e) => console.warn('Audio play error:', e));
+      }
     }
   };
 
-  // Jump to specific verse when clicked
-  const handleVerseClick = (verse: VerseItem) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = verse.startTime;
-    setCurrentTime(verse.startTime);
+  // When user clicks ANY verse, immediately speak/jump to that verse!
+  const handleVerseClick = (verse: VerseItem, index: number) => {
     setActiveSentenceId(verse.sentenceId);
-    if (!isPlaying) {
-      audioRef.current.play().then(() => setIsPlaying(true));
+    setCurrentVerseIndex(index);
+
+    if (audioMode === 'vocal') {
+      setIsPlaying(true);
+      isPlayingRef.current = true;
+      speakVerse(index);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.currentTime = verse.startTime;
+        setCurrentTime(verse.startTime);
+        if (!isPlaying) {
+          audioRef.current.play().then(() => setIsPlaying(true));
+        }
+      }
     }
     saveBookmark(verse.sentenceId, verse.startTime);
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const targetTime = parseFloat(e.target.value);
-    if (audioRef.current) {
-      audioRef.current.currentTime = targetTime;
-      setCurrentTime(targetTime);
+  const handleNextVerse = () => {
+    if (currentVerseIndex + 1 < verses.length) {
+      if (audioMode === 'vocal') {
+        speakVerse(currentVerseIndex + 1);
+      } else {
+        const next = verses[currentVerseIndex + 1];
+        handleVerseClick(next, currentVerseIndex + 1);
+      }
     }
   };
 
-  const skipSeconds = (seconds: number) => {
-    if (!audioRef.current) return;
-    const newTime = Math.max(0, Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + seconds));
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
+  const handlePrevVerse = () => {
+    if (currentVerseIndex - 1 >= 0) {
+      if (audioMode === 'vocal') {
+        speakVerse(currentVerseIndex - 1);
+      } else {
+        const prev = verses[currentVerseIndex - 1];
+        handleVerseClick(prev, currentVerseIndex - 1);
+      }
+    }
   };
 
+  // Change Vocal Playback Speed
   const handleSpeedChange = (speed: number) => {
     setPlaybackRate(speed);
     if (audioRef.current) {
       audioRef.current.playbackRate = speed;
     }
+    if (isPlaying && audioMode === 'vocal') {
+      speakVerse(currentVerseIndex);
+    }
   };
 
-  // Auto-Save Reading Bookmark to Database and LocalStorage
+  // Time update for Instrumental audio mode
+  const handleTimeUpdate = () => {
+    if (audioMode === 'instrumental' && audioRef.current) {
+      const cur = audioRef.current.currentTime;
+      setCurrentTime(cur);
+
+      const found = verses.find((v) => cur >= v.startTime && cur <= v.endTime + 0.3);
+      if (found && found.sentenceId !== activeSentenceId) {
+        setActiveSentenceId(found.sentenceId);
+        const idx = verses.findIndex((v) => v.sentenceId === found.sentenceId);
+        if (idx >= 0) setCurrentVerseIndex(idx);
+
+        if (autoScrollEnabled && verseElementsRef.current[found.sentenceId]) {
+          verseElementsRef.current[found.sentenceId]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+      }
+    }
+  };
+
+  // Auto-Save Reading Bookmark
   const saveBookmark = async (sentenceId?: string, timestamp?: number) => {
     const sId = sentenceId || activeSentenceId || 'start';
     const ts = timestamp !== undefined ? timestamp : currentTime;
@@ -233,113 +381,95 @@ export default function InteractiveReader({
       setBookmarkSavedToast(true);
       setTimeout(() => setBookmarkSavedToast(false), 2000);
     } catch (e) {
-      console.warn('Bookmark save failed:', e);
+      console.warn('Bookmark save error:', e);
     }
   };
 
-  // Auto-save every 15 seconds during continuous playback
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      if (activeSentenceId) {
-        saveBookmark(activeSentenceId, currentTime);
-      }
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [isPlaying, activeSentenceId, currentTime]);
-
-  const formatTime = (secs: number) => {
-    if (isNaN(secs)) return '0:00';
-    const minutes = Math.floor(secs / 60);
-    const seconds = Math.floor(secs % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  // Typography font size classes
+  // Typography font size mapping
   const fontClassMap = {
-    sm: { script: 'text-lg leading-relaxed', trans: 'text-xs leading-normal' },
+    sm: { script: 'text-xl leading-relaxed', trans: 'text-xs leading-normal' },
     md: { script: 'text-2xl sm:text-3xl leading-relaxed sm:leading-loose', trans: 'text-sm sm:text-base leading-relaxed' },
     lg: { script: 'text-3xl sm:text-4xl leading-relaxed sm:leading-loose', trans: 'text-base sm:text-lg leading-relaxed' },
     xl: { script: 'text-4xl sm:text-5xl leading-relaxed sm:leading-loose', trans: 'text-lg sm:text-xl leading-relaxed' },
   };
 
-  // Theme styling
+  // Theme Styling
   const themeClasses = {
-    dark: 'bg-[#0e1017] text-stone-100',
-    sepia: 'bg-[#f7f0e0] text-[#3e2d19]',
-    parchment: 'bg-[#fdfaf5] text-[#241d15]',
-    midnight: 'bg-[#050608] text-stone-200',
+    gold: 'bg-[#ea8913] text-[#000000]',
+    parchment: 'bg-[#fffcf4] text-[#1a1a1a]',
+    sepia: 'bg-[#faebd1] text-[#2b1802]',
+    dark: 'bg-[#0f1118] text-[#f1e9dc]',
   };
 
-  const verseContainerTheme = {
-    dark: {
-      normal: 'bg-[#151822]/70 hover:bg-[#1b202e] border-stone-800/80',
-      active: 'bg-gradient-to-r from-amber-500/20 via-amber-500/15 to-transparent border-amber-500 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/50',
-      textScript: 'text-amber-100',
-      textHindi: 'text-amber-200/90',
-      textEng: 'text-stone-400',
-    },
-    sepia: {
-      normal: 'bg-[#ede3ce]/70 hover:bg-[#e4d7bf] border-[#d8c5a4]',
-      active: 'bg-[#faecd1] border-[#c57024] shadow-md ring-1 ring-[#c57024]/50',
-      textScript: 'text-[#5a2e0e]',
-      textHindi: 'text-[#6b3c1a]',
-      textEng: 'text-[#7a5a41]',
+  const verseBoxTheme = {
+    gold: {
+      normal: 'bg-[#ffdca3] hover:bg-[#ffe5b8] border-2 border-[#522700] text-[#000000] shadow-sm',
+      active: 'bg-[#fff5dc] border-3 border-[#000000] ring-4 ring-[#ffeaae] shadow-2xl scale-[1.01]',
+      textScript: 'text-[#000000] font-black',
+      textHindi: 'text-[#1f0f00] font-bold',
+      textEng: 'text-[#381b00] font-semibold',
     },
     parchment: {
-      normal: 'bg-white/90 hover:bg-stone-50 border-stone-200 shadow-sm',
-      active: 'bg-[#fff9ed] border-amber-600 shadow-md ring-1 ring-amber-500/40',
-      textScript: 'text-stone-900',
-      textHindi: 'text-stone-800',
-      textEng: 'text-stone-600',
+      normal: 'bg-white hover:bg-[#fffdf8] border-2 border-[#e5cd91] text-[#1a1a1a] shadow-xs',
+      active: 'bg-[#fff9eb] border-2 border-[#c59b27] ring-4 ring-[#f5e7c8] shadow-xl',
+      textScript: 'text-[#1a1a1a] font-bold',
+      textHindi: 'text-[#333333]',
+      textEng: 'text-[#555555]',
     },
-    midnight: {
-      normal: 'bg-[#0d0f15]/80 hover:bg-[#141721] border-stone-900',
-      active: 'bg-amber-950/30 border-amber-500/90 shadow-xl ring-1 ring-amber-500/60',
-      textScript: 'text-amber-200',
-      textHindi: 'text-stone-200',
+    sepia: {
+      normal: 'bg-[#f4e0bc] border-2 border-[#784805] text-[#2b1802]',
+      active: 'bg-[#fff1d6] border-2 border-[#2b1802] ring-3 ring-[#e5c188] shadow-xl',
+      textScript: 'text-[#1f0f00] font-bold',
+      textHindi: 'text-[#2b1802]',
+      textEng: 'text-[#472905]',
+    },
+    dark: {
+      normal: 'bg-[#151822]/80 border border-stone-800 text-stone-200',
+      active: 'bg-[#222838] border-2 border-[#e69a28] ring-3 ring-amber-500/30 text-white shadow-2xl',
+      textScript: 'text-amber-200 font-bold',
+      textHindi: 'text-stone-300',
       textEng: 'text-stone-400',
     },
   };
 
-  const currentThemeStyles = verseContainerTheme[readingTheme];
+  const currentTheme = verseBoxTheme[readingTheme];
 
   if (locked) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full bg-[#131620] border border-amber-500/30 rounded-3xl p-8 text-center shadow-2xl space-y-6">
-          <div className="w-16 h-16 bg-amber-500/10 border-2 border-amber-500/40 rounded-full flex items-center justify-center mx-auto text-amber-400">
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#ea8913]">
+        <div className="max-w-md w-full bg-[#ffdca3] border-3 border-[#522700] rounded-3xl p-8 text-center shadow-2xl space-y-6 text-[#000000]">
+          <div className="w-16 h-16 bg-[#1f0f00] border-2 border-[#522700] rounded-full flex items-center justify-center mx-auto text-[#ffd99e]">
             <Lock className="w-8 h-8" />
           </div>
           <div>
-            <span className="text-xs uppercase tracking-widest text-amber-400 font-semibold">Premium Scripture</span>
-            <h2 className="text-2xl font-serif font-bold text-stone-100 mt-1">Chapter {chapterNumber} is Locked</h2>
-            <p className="text-xs text-stone-400 mt-2">
+            <span className="text-xs uppercase tracking-widest text-[#000000] font-black">Premium Scripture</span>
+            <h2 className="text-2xl font-heading font-black text-[#000000] mt-1">Chapter {chapterNumber} is Locked</h2>
+            <p className="text-xs text-[#2b1400] font-bold mt-2">
               Chapter 1 of {book.title} is 100% free to read and listen. Chapters 2 onwards require full digital access.
             </p>
           </div>
 
-          <div className="p-4 bg-stone-900/90 rounded-2xl border border-stone-800 text-left space-y-2 text-xs">
+          <div className="p-4 bg-[#fff4d6] rounded-2xl border-2 border-[#522700] text-left space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="text-stone-400">Access Type:</span>
-              <span className="font-semibold text-emerald-400">Permanent Lifetime DRM License</span>
+              <span className="font-bold text-[#2b1400]">Access Type:</span>
+              <span className="font-black text-emerald-900">Permanent Lifetime DRM License</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-stone-400">Unlock Price:</span>
-              <span className="font-bold text-amber-400 text-sm">₹{book.price}</span>
+              <span className="font-bold text-[#2b1400]">Unlock Price:</span>
+              <span className="font-black text-[#000000] text-sm">₹{book.price}</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <button
               onClick={() => setUnlockModalOpen(true)}
-              className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 text-stone-950 font-bold rounded-2xl shadow-xl transition"
+              className="w-full py-3.5 px-6 bg-[#1f0f00] hover:bg-[#381b00] text-[#ffd99e] font-black rounded-2xl shadow-xl transition border-2 border-[#522700]"
             >
               Unlock All Chapters for ₹{book.price}
             </button>
             <Link
               href={`/reader/${slug}/1`}
-              className="block w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-stone-300 text-xs font-semibold rounded-xl border border-stone-800 transition"
+              className="block w-full py-2.5 px-4 bg-[#fff4d6] hover:bg-[#ffebbf] text-[#000000] text-xs font-black rounded-xl border-2 border-[#522700] transition"
             >
               ← Read Free Chapter 1 Instead
             </Link>
@@ -361,35 +491,37 @@ export default function InteractiveReader({
 
   return (
     <div className={`min-h-screen transition-colors duration-300 pb-36 ${themeClasses[readingTheme]}`}>
-      {/* Hidden HTML5 Audio Element for synced playback */}
+      {/* Hidden Audio Element for Instrumental Mode */}
       <audio
         ref={audioRef}
         src={chapter?.audioUrl || 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3'}
         onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
+        onLoadedMetadata={() => {
+          if (audioRef.current) setDuration(audioRef.current.duration);
+        }}
         onEnded={() => setIsPlaying(false)}
         preload="auto"
       />
 
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 border-b border-stone-800/60 px-4 sm:px-8 py-3">
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-[#ea8913]/95 border-b-2 border-[#522700] px-4 sm:px-8 py-3 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 min-w-0">
             <Link
               href={`/book/${slug}`}
-              className="p-2 rounded-xl bg-stone-800/60 hover:bg-stone-700/80 text-stone-300 transition"
+              className="p-2 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] border-2 border-[#522700] transition font-bold"
               title="Return to Book Overview"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
+                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#1f0f00] text-[#ffd99e] border border-[#522700]">
                   {book.religion}
                 </span>
-                <span className="text-xs text-stone-400 truncate hidden sm:inline">{book.title}</span>
+                <span className="text-xs text-[#241000] font-bold truncate hidden sm:inline">{book.title}</span>
               </div>
-              <h1 className="text-sm sm:text-base font-serif font-bold text-stone-100 truncate mt-0.5">
+              <h1 className="text-sm sm:text-base font-heading font-black text-[#000000] truncate mt-0.5">
                 {chapter.title}
               </h1>
             </div>
@@ -397,24 +529,24 @@ export default function InteractiveReader({
 
           {/* Reader Action Controls */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Ambient Soundscape Controller */}
-            <AmbientSoundscape initialSound="flute" initialVolume={0.3} />
+            {/* Ambient Soundscape Controller (Temple Bells / Flute / Rain) */}
+            <AmbientSoundscape initialSound="flute" initialVolume={0.25} />
 
-            {/* Bookmark progress button */}
+            {/* Bookmark button */}
             <button
               onClick={() => saveBookmark()}
-              className="p-2 rounded-xl bg-stone-800/60 hover:bg-stone-700/80 text-amber-400 transition"
+              className="p-2 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] border-2 border-[#522700] transition font-bold"
               title="Save Bookmark"
             >
-              <Bookmark className="w-4 h-4" />
+              <Bookmark className="w-4 h-4 stroke-[2.5]" />
             </button>
 
             {/* Settings trigger */}
             <button
               onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-stone-800/60 hover:bg-stone-700/80 text-xs font-medium text-stone-300 transition"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-xs font-black text-[#000000] border-2 border-[#522700] transition"
             >
-              <Sliders className="w-3.5 h-3.5" />
+              <Sliders className="w-3.5 h-3.5 stroke-[2.5]" />
               <span className="hidden sm:inline">Settings</span>
             </button>
           </div>
@@ -422,52 +554,59 @@ export default function InteractiveReader({
 
         {/* Settings Drawer */}
         {showSettingsDrawer && (
-          <div className="max-w-5xl mx-auto mt-3 p-4 bg-[#141722] border border-amber-900/40 rounded-2xl shadow-2xl text-stone-200 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="max-w-5xl mx-auto mt-3 p-4 bg-[#ffdca3] border-3 border-[#522700] rounded-2xl shadow-2xl text-[#000000] animate-in fade-in slide-in-from-top-2 duration-150">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              {/* Theme Selector */}
+              {/* Voice Reciter Content */}
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-2">
-                  Reading Sanctuary Theme
+                <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-2">
+                  Voice Reciter Mode (उच्चारण विकल्प)
                 </label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
-                    onClick={() => setReadingTheme('dark')}
-                    className={`py-2 px-1 rounded-lg border text-center font-medium ${
-                      readingTheme === 'dark' ? 'bg-stone-800 border-amber-500 text-amber-300' : 'bg-stone-900 border-stone-800'
+                    onClick={() => {
+                      setVocalVoiceContent('original');
+                      if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
+                    }}
+                    className={`py-2 px-1 rounded-lg border-2 text-center font-black ${
+                      vocalVoiceContent === 'original'
+                        ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                        : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                     }`}
                   >
-                    Dark
+                    Original Script
                   </button>
                   <button
-                    onClick={() => setReadingTheme('sepia')}
-                    className={`py-2 px-1 rounded-lg border text-center font-medium ${
-                      readingTheme === 'sepia' ? 'bg-[#ede3ce] border-amber-700 text-[#3e2d19]' : 'bg-[#e5dac3] text-[#3e2d19]'
+                    onClick={() => {
+                      setVocalVoiceContent('hindi');
+                      if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
+                    }}
+                    className={`py-2 px-1 rounded-lg border-2 text-center font-black ${
+                      vocalVoiceContent === 'hindi'
+                        ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                        : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                     }`}
                   >
-                    Sepia
+                    Hindi Meaning
                   </button>
                   <button
-                    onClick={() => setReadingTheme('parchment')}
-                    className={`py-2 px-1 rounded-lg border text-center font-medium ${
-                      readingTheme === 'parchment' ? 'bg-white border-amber-600 text-stone-900' : 'bg-stone-100 text-stone-800'
+                    onClick={() => {
+                      setVocalVoiceContent('both');
+                      if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
+                    }}
+                    className={`py-2 px-1 rounded-lg border-2 text-center font-black ${
+                      vocalVoiceContent === 'both'
+                        ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                        : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                     }`}
                   >
-                    Light
-                  </button>
-                  <button
-                    onClick={() => setReadingTheme('midnight')}
-                    className={`py-2 px-1 rounded-lg border text-center font-medium ${
-                      readingTheme === 'midnight' ? 'bg-black border-amber-500 text-amber-200' : 'bg-stone-950 border-stone-900'
-                    }`}
-                  >
-                    OLED
+                    Both (दोनों)
                   </button>
                 </div>
               </div>
 
               {/* Font Size Adjuster */}
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-2">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-2">
                   Sacred Typography Size
                 </label>
                 <div className="flex items-center space-x-1.5">
@@ -475,8 +614,10 @@ export default function InteractiveReader({
                     <button
                       key={sz}
                       onClick={() => setFontSize(sz)}
-                      className={`flex-1 py-1.5 rounded-lg border text-center font-bold uppercase text-xs ${
-                        fontSize === sz ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-stone-900 border-stone-800 text-stone-400'
+                      className={`flex-1 py-1.5 rounded-lg border-2 text-center font-black uppercase text-xs ${
+                        fontSize === sz
+                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                       }`}
                     >
                       {sz}
@@ -485,32 +626,24 @@ export default function InteractiveReader({
                 </div>
               </div>
 
-              {/* Multilingual Display Toggles */}
+              {/* Theme & Auto Center */}
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-2">
-                  Script & Translations
+                <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-2">
+                  Display Options
                 </label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowHindi(!showHindi)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg border text-center font-medium text-[11px] ${
-                      showHindi ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-stone-900 border-stone-800 text-stone-500'
+                    className={`flex-1 py-1.5 px-2 rounded-lg border-2 text-center font-black text-[11px] ${
+                      showHindi ? 'bg-[#1f0f00] text-[#ffd99e] border-black' : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                     }`}
                   >
-                    Hindi {showHindi ? '✓' : ''}
-                  </button>
-                  <button
-                    onClick={() => setShowEnglish(!showEnglish)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg border text-center font-medium text-[11px] ${
-                      showEnglish ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-stone-900 border-stone-800 text-stone-500'
-                    }`}
-                  >
-                    English {showEnglish ? '✓' : ''}
+                    Hindi {showHindi ? '✓' : 'Off'}
                   </button>
                   <button
                     onClick={() => setAutoScrollEnabled(!autoScrollEnabled)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg border text-center font-medium text-[11px] ${
-                      autoScrollEnabled ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-stone-900 border-stone-800 text-stone-500'
+                    className={`flex-1 py-1.5 px-2 rounded-lg border-2 text-center font-black text-[11px] ${
+                      autoScrollEnabled ? 'bg-[#105c24] text-white border-black' : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
                     }`}
                   >
                     Auto-Center {autoScrollEnabled ? '✓' : 'Off'}
@@ -522,39 +655,78 @@ export default function InteractiveReader({
         )}
       </header>
 
-      {/* Bookmark Saved Notification */}
+      {/* Bookmark Toast */}
       {bookmarkSavedToast && (
-        <div className="fixed top-20 right-6 z-50 bg-amber-500 text-stone-950 font-bold px-4 py-2 rounded-xl shadow-2xl flex items-center space-x-2 text-xs animate-in slide-in-from-top-2 duration-150">
-          <Check className="w-4 h-4" />
+        <div className="fixed top-20 right-6 z-50 bg-[#1f0f00] text-[#ffd99e] font-black px-4 py-2 rounded-xl shadow-2xl flex items-center space-x-2 text-xs border-2 border-[#522700] animate-in slide-in-from-top-2 duration-150">
+          <Check className="w-4 h-4 stroke-[3]" />
           <span>Reading progress synchronized to shelf!</span>
         </div>
       )}
 
       {/* Main Scripture Verses Reader Stream */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-12">
-        {/* Chapter Prologue Header */}
-        <div className="text-center mb-10 pb-8 border-b border-stone-800/40">
-          <span className="text-amber-500 text-3xl font-serif">ॐ</span>
-          <h2 className="text-2xl sm:text-3xl font-serif font-extrabold tracking-tight mt-2 text-amber-200">
+        {/* Chapter Header Banner */}
+        <div className="text-center mb-10 pb-8 border-b-2 border-[#522700]">
+          <span className="text-[#000000] text-3xl font-serif font-black">ॐ</span>
+          <h2 className="text-2xl sm:text-3xl font-heading font-black tracking-tight mt-2 text-[#000000]">
             {chapter.title}
           </h2>
           {chapter.summary && (
-            <p className="mt-3 text-xs sm:text-sm text-stone-400 max-w-2xl mx-auto italic font-serif leading-relaxed">
+            <p className="mt-3 text-xs sm:text-sm text-[#2b1400] font-bold max-w-2xl mx-auto italic font-serif leading-relaxed">
               "{chapter.summary}"
             </p>
           )}
-          <div className="flex items-center justify-center space-x-4 mt-4 text-[11px] text-stone-400">
-            <span>{chapter.verses?.length || 0} Synced Verses</span>
+
+          {/* Mode Switcher Pill */}
+          <div className="inline-flex items-center gap-2 mt-5 p-1.5 bg-[#ffdca3] border-2 border-[#522700] rounded-full shadow-sm">
+            <button
+              onClick={() => {
+                if (isPlaying) {
+                  if (synthRef.current) synthRef.current.cancel();
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsPlaying(false);
+                }
+                setAudioMode('vocal');
+              }}
+              className={`flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-black transition ${
+                audioMode === 'vocal'
+                  ? 'bg-[#1f0f00] text-[#ffd99e] shadow-sm'
+                  : 'text-[#000000] hover:bg-[#ffebc2]'
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>🗣️ Human Voice Reciter (वाणी पाठ)</span>
+            </button>
+            <button
+              onClick={() => {
+                if (isPlaying) {
+                  if (synthRef.current) synthRef.current.cancel();
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsPlaying(false);
+                }
+                setAudioMode('instrumental');
+              }}
+              className={`flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-black transition ${
+                audioMode === 'instrumental'
+                  ? 'bg-[#1f0f00] text-[#ffd99e] shadow-sm'
+                  : 'text-[#000000] hover:bg-[#ffebc2]'
+              }`}
+            >
+              <Music className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>🎵 Sacred Instrumental (संगीत)</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center space-x-4 mt-3 text-[11px] text-[#241000] font-bold">
+            <span>{verses.length} Synced Verses</span>
             <span>•</span>
-            <span>Click any verse to instantly jump audio</span>
-            <span>•</span>
-            <span>Karaoke Real-Time Highlighting</span>
+            <span className="text-[#000000] underline font-black">Click any verse to instantly hear it spoken!</span>
           </div>
         </div>
 
         {/* Verses List */}
         <div className="space-y-6">
-          {chapter.verses?.map((verse, index) => {
+          {verses.map((verse, index) => {
             const isActive = activeSentenceId === verse.sentenceId;
             return (
               <div
@@ -562,56 +734,49 @@ export default function InteractiveReader({
                 ref={(el) => {
                   verseElementsRef.current[verse.sentenceId] = el;
                 }}
-                onClick={() => handleVerseClick(verse)}
-                className={`group cursor-pointer rounded-2xl p-5 sm:p-7 border transition-all duration-300 relative ${
-                  isActive ? currentThemeStyles.active : currentThemeStyles.normal
+                onClick={() => handleVerseClick(verse, index)}
+                className={`group cursor-pointer rounded-2xl p-5 sm:p-7 border-2 transition-all duration-300 relative ${
+                  isActive ? currentTheme.active : currentTheme.normal
                 }`}
               >
-                {/* Active Playing Indicator Pill */}
+                {/* Active Pill */}
                 {isActive && (
-                  <div className="absolute -top-3 left-6 px-3 py-0.5 rounded-full bg-amber-500 text-stone-950 text-[10px] font-black uppercase tracking-widest flex items-center space-x-1 shadow-md">
-                    <Sparkles className="w-2.5 h-2.5 animate-spin" />
-                    <span>Reciting Now</span>
+                  <div className="absolute -top-3.5 left-6 px-3.5 py-0.5 rounded-full bg-[#000000] text-[#ffdc82] text-[10px] font-black uppercase tracking-widest flex items-center space-x-1.5 shadow-md">
+                    <Sparkles className="w-3 h-3 text-[#ffdc82] animate-spin" />
+                    <span>{isPlaying ? 'Reciting Now (उच्चारित हो रहा है)' : 'Selected Verse'}</span>
                   </div>
                 )}
 
                 <div className="flex items-start justify-between gap-4">
-                  {/* Verse Index Badge */}
+                  {/* Verse Number Badge */}
                   <div className="flex-shrink-0">
                     <span
-                      className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-xs font-serif font-bold ${
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black ${
                         isActive
-                          ? 'bg-amber-500 text-stone-950 shadow-md'
-                          : 'bg-stone-800/80 text-stone-400 group-hover:text-amber-300'
+                          ? 'bg-[#000000] text-[#ffdc82] shadow-md'
+                          : 'bg-[#fff4d6] text-[#000000] border-2 border-[#522700]'
                       }`}
                     >
                       {index + 1}
                     </span>
                   </div>
 
-                  {/* Sacred Text Content */}
+                  {/* Verse Content */}
                   <div className="flex-1 space-y-3 min-w-0">
-                    {/* Original Script (Devanagari, Arabic, Gurmukhi, Hebrew) */}
+                    {/* Original Script */}
                     <p
-                      className={`font-serif font-semibold tracking-wide ${fontClassMap[fontSize].script} ${
-                        isActive ? currentThemeStyles.textScript : ''
+                      className={`font-serif tracking-wide ${fontClassMap[fontSize].script} ${
+                        isActive ? currentTheme.textScript : 'text-[#000000] font-black'
                       }`}
                     >
                       {verse.originalScript}
                     </p>
 
-                    {/* Transliteration if available */}
-                    {showTransliteration && verse.transliteration && (
-                      <p className="text-xs italic text-amber-400/80 font-serif">
-                        {verse.transliteration}
-                      </p>
-                    )}
-
                     {/* Hindi Translation */}
                     {showHindi && verse.hindiTranslation && (
-                      <div className="pt-2 border-t border-stone-800/40">
-                        <p className={`font-serif ${fontClassMap[fontSize].trans} ${currentThemeStyles.textHindi}`}>
-                          <span className="text-[10px] uppercase tracking-wider font-sans font-bold text-amber-500/80 mr-1.5">
+                      <div className="pt-2 border-t-2 border-[#522700]/30">
+                        <p className={`font-serif ${fontClassMap[fontSize].trans} ${currentTheme.textHindi}`}>
+                          <span className="text-[10px] uppercase font-sans font-black text-[#000000] mr-1.5 underline">
                             भावार्थ:
                           </span>
                           {verse.hindiTranslation}
@@ -621,8 +786,8 @@ export default function InteractiveReader({
 
                     {/* English Meaning */}
                     {showEnglish && verse.englishTranslation && (
-                      <p className={`text-xs sm:text-sm font-sans italic opacity-85 ${currentThemeStyles.textEng}`}>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-stone-400 mr-1.5 not-italic">
+                      <p className={`text-xs sm:text-sm font-sans italic ${currentTheme.textEng}`}>
+                        <span className="text-[10px] uppercase font-bold text-[#000000] mr-1.5 not-italic">
                           Meaning:
                         </span>
                         {verse.englishTranslation}
@@ -630,11 +795,22 @@ export default function InteractiveReader({
                     )}
                   </div>
 
-                  {/* Timestamp Tag */}
-                  <div className="flex-shrink-0 text-right opacity-60 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] font-mono text-stone-400 bg-stone-900/60 px-2 py-1 rounded-md">
-                      {formatTime(verse.startTime)}
-                    </span>
+                  {/* Play Verse Icon Button */}
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVerseClick(verse, index);
+                      }}
+                      className="p-2 rounded-xl bg-[#1f0f00] text-[#ffd99e] hover:bg-[#381b00] transition shadow-xs flex items-center justify-center"
+                      title="Speak this verse"
+                    >
+                      {isActive && isPlaying ? (
+                        <Pause className="w-4 h-4 fill-[#ffd99e]" />
+                      ) : (
+                        <Play className="w-4 h-4 fill-[#ffd99e] ml-0.5" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -642,13 +818,13 @@ export default function InteractiveReader({
           })}
         </div>
 
-        {/* Chapter Footer Navigation */}
-        <div className="mt-12 pt-8 border-t border-stone-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Chapter Navigation */}
+        <div className="mt-12 pt-8 border-t-2 border-[#522700] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             {chapterNumber > 1 ? (
               <Link
                 href={`/reader/${slug}/${chapterNumber - 1}`}
-                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-stone-800/80 hover:bg-stone-700 text-stone-200 text-xs font-semibold transition"
+                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] text-xs font-black border-2 border-[#522700] transition"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous Chapter {chapterNumber - 1}</span>
@@ -658,17 +834,15 @@ export default function InteractiveReader({
             )}
           </div>
 
-          <div className="text-center">
-            <span className="text-xs text-stone-400">
-              Chapter {chapterNumber} of {book.totalChapters}
-            </span>
+          <div className="text-center font-black text-xs text-[#000000]">
+            Chapter {chapterNumber} of {book.totalChapters}
           </div>
 
           <div>
             {chapterNumber < book.totalChapters && (
               <Link
                 href={`/reader/${slug}/${chapterNumber + 1}`}
-                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition shadow-md"
+                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#1f0f00] hover:bg-[#381b00] text-[#ffd99e] text-xs font-black transition shadow-md border-2 border-[#522700]"
               >
                 <span>Next Chapter {chapterNumber + 1}</span>
                 <ChevronRight className="w-4 h-4" />
@@ -678,121 +852,92 @@ export default function InteractiveReader({
         </div>
       </main>
 
-      {/* Persistent Bottom Audio Player Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0d0f17]/95 backdrop-blur-xl border-t border-amber-950/60 px-4 sm:px-8 py-3 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+      {/* Persistent Bottom Voice & Audio Player Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#1f0f00] border-t-3 border-[#522700] px-4 sm:px-8 py-3.5 shadow-2xl text-[#ffd99e]">
         <div className="max-w-5xl mx-auto space-y-2">
-          {/* Seek Progress Bar */}
-          <div className="flex items-center space-x-3 text-[11px] font-mono text-stone-400">
-            <span>{formatTime(currentTime)}</span>
-            <div className="relative flex-1 group flex items-center">
-              <input
-                type="range"
-                min="0"
-                max={duration || 100}
-                step="0.1"
-                value={currentTime}
-                onChange={handleSeek}
-                className="w-full h-1.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:h-2 transition-all"
-              />
-            </div>
-            <span>{formatTime(duration)}</span>
-          </div>
-
           {/* Controls Strip */}
           <div className="flex items-center justify-between gap-2">
             {/* Left: Current Active Verse Info */}
-            <div className="hidden md:flex items-center space-x-3 max-w-xs truncate">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-serif font-bold text-xs flex-shrink-0">
-                ॐ
+            <div className="flex items-center space-x-3 max-w-xs truncate">
+              <div className="w-10 h-10 rounded-xl bg-[#381b00] border border-[#522700] flex items-center justify-center text-[#ffd99e] font-serif font-black text-sm flex-shrink-0">
+                {audioMode === 'vocal' ? '🗣️' : '🎵'}
               </div>
               <div className="truncate">
-                <p className="text-xs font-serif font-semibold text-stone-200 truncate">{chapter.title}</p>
-                <p className="text-[10px] text-amber-400 truncate">
-                  {activeSentenceId ? `Syncing Verse ${activeSentenceId}` : 'Ready to recite'}
+                <p className="text-xs font-heading font-black text-[#ffffff] truncate">{chapter.title}</p>
+                <p className="text-[10px] text-[#ffdc82] font-bold truncate">
+                  {audioMode === 'vocal'
+                    ? `Voice: Verse ${currentVerseIndex + 1} of ${verses.length}`
+                    : `Instrumental: Verse ${currentVerseIndex + 1}`}
                 </p>
               </div>
             </div>
 
-            {/* Center: Play / Pause / Skip controls */}
+            {/* Center: Play / Pause / Next / Prev Controls */}
             <div className="flex items-center space-x-3 sm:space-x-4 mx-auto">
               <button
-                onClick={() => skipSeconds(-5)}
-                className="p-2 text-stone-400 hover:text-amber-300 transition"
-                title="Rewind 5 seconds"
+                onClick={handlePrevVerse}
+                disabled={currentVerseIndex === 0}
+                className="p-2 text-[#ffd99e] hover:text-white transition disabled:opacity-30"
+                title="Previous Verse"
               >
-                <RotateCcw className="w-4 h-4" />
+                <SkipBack className="w-5 h-5 fill-current" />
               </button>
 
               <button
                 onClick={togglePlay}
-                className="w-11 h-11 rounded-full bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-stone-950 font-bold flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ffd99e] to-[#ffc570] hover:from-white hover:to-[#ffd99e] text-[#1f0f00] font-black flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                title={isPlaying ? 'Pause Recitation' : 'Start Recitation'}
               >
-                {isPlaying ? <Pause className="w-5 h-5 fill-stone-950" /> : <Play className="w-5 h-5 fill-stone-950 ml-0.5" />}
+                {isPlaying ? <Pause className="w-6 h-6 fill-[#1f0f00]" /> : <Play className="w-6 h-6 fill-[#1f0f00] ml-0.5" />}
               </button>
 
               <button
-                onClick={() => skipSeconds(5)}
-                className="p-2 text-stone-400 hover:text-amber-300 transition"
-                title="Forward 5 seconds"
+                onClick={handleNextVerse}
+                disabled={currentVerseIndex + 1 >= verses.length}
+                className="p-2 text-[#ffd99e] hover:text-white transition disabled:opacity-30"
+                title="Next Verse"
               >
-                <RotateCw className="w-4 h-4" />
+                <SkipForward className="w-5 h-5 fill-current" />
               </button>
             </div>
 
-            {/* Right: Playback Speed & Volume */}
+            {/* Right: Recite Mode & Speed */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Playback speed toggle */}
+              {/* Speed Multiplier */}
               <div className="relative group">
-                <button className="px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-800 text-xs font-mono font-semibold text-amber-300 hover:bg-stone-800">
+                <button className="px-2.5 py-1.5 rounded-lg bg-[#381b00] border border-[#522700] text-xs font-mono font-black text-[#ffdc82] hover:bg-[#522700]">
                   {playbackRate}x
                 </button>
-                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:flex flex-col bg-stone-900 border border-stone-800 rounded-xl p-1.5 shadow-xl z-50">
-                  {[0.75, 1.0, 1.25, 1.5, 2.0].map((rate) => (
+                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:flex flex-col bg-[#1f0f00] border-2 border-[#522700] rounded-xl p-1.5 shadow-xl z-50">
+                  {[0.75, 0.9, 1.0, 1.25, 1.5].map((rate) => (
                     <button
                       key={rate}
                       onClick={() => handleSpeedChange(rate)}
                       className={`px-3 py-1 rounded-lg text-xs font-mono transition text-left ${
-                        playbackRate === rate ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-stone-400 hover:bg-stone-800'
+                        playbackRate === rate ? 'bg-[#381b00] text-[#ffdc82] font-black' : 'text-[#ffd99e] hover:bg-[#2b1400]'
                       }`}
                     >
-                      {rate}x
+                      {rate}x {rate === 0.9 ? '(Devotional)' : ''}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Volume */}
-              <div className="hidden sm:flex items-center space-x-1.5">
-                <button
-                  onClick={() => {
-                    if (audioRef.current) {
-                      const newMute = !isMuted;
-                      setIsMuted(newMute);
-                      audioRef.current.muted = newMute;
-                    }
-                  }}
-                  className="p-1.5 text-stone-400 hover:text-stone-200"
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    setVolume(v);
-                    setIsMuted(false);
-                    if (audioRef.current) {
-                      audioRef.current.volume = v;
-                      audioRef.current.muted = false;
-                    }
-                  }}
-                  className="w-16 h-1.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                />
-              </div>
+              {/* Volume / Mute */}
+              <button
+                onClick={() => {
+                  const newMute = !isMuted;
+                  setIsMuted(newMute);
+                  if (audioRef.current) audioRef.current.muted = newMute;
+                  if (synthRef.current && isPlaying) {
+                    speakVerse(currentVerseIndex);
+                  }
+                }}
+                className="p-2 text-[#ffd99e] hover:text-white"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         </div>
