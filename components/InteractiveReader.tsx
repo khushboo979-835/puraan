@@ -82,14 +82,15 @@ export default function InteractiveReader({
 
   // Mode: 'vocal' (Speaks text line by line using SpeechSynthesis) or 'instrumental' (Plays background mp3)
   const [audioMode, setAudioMode] = useState<'vocal' | 'instrumental'>('vocal');
-  const [vocalVoiceContent, setVocalVoiceContent] = useState<'original' | 'hindi' | 'both'>('original');
+  const [vocalVoiceContent, setVocalVoiceContent] = useState<'original' | 'hindi' | 'both'>('both');
 
   // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(0.9); // Slightly calm devotional pace
+  const [playbackRate, setPlaybackRate] = useState(0.9); // Devotional pacing
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Audio Ref for Instrumental Mode / Background Music
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -123,10 +124,22 @@ export default function InteractiveReader({
 
   const verses = chapter?.verses || [];
 
-  // Initialize SpeechSynthesis
+  // Initialize SpeechSynthesis and voice list
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
+
+      const updateVoices = () => {
+        if (synthRef.current) {
+          const v = synthRef.current.getVoices();
+          setAvailableVoices(v);
+        }
+      };
+
+      updateVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      }
     }
     return () => {
       if (synthRef.current) {
@@ -142,14 +155,14 @@ export default function InteractiveReader({
 
   // Determine speech language code based on religion and content
   const getSpeechLanguageCode = () => {
-    if (vocalVoiceContent === 'hindi') return 'hi-IN';
+    if (vocalVoiceContent === 'hindi' || vocalVoiceContent === 'both') return 'hi-IN';
     switch (book.religion) {
       case 'Hinduism':
       case 'Jainism':
       case 'Buddhism':
         return 'hi-IN';
       case 'Sikhism':
-        return 'hi-IN'; // Or pa-IN if available
+        return 'hi-IN';
       case 'Islam':
         return 'ar-SA';
       case 'Christianity':
@@ -159,13 +172,13 @@ export default function InteractiveReader({
     }
   };
 
-  // Find best speech synthesis voice (prefer Indian voices or Hindi/regional)
+  // Find best speech synthesis voice (prefer Indian Hindi voices)
   const getPreferredVoice = (langCode: string) => {
     if (!synthRef.current) return null;
-    const allVoices = synthRef.current.getVoices();
+    const allVoices = synthRef.current.getVoices().length > 0 ? synthRef.current.getVoices() : availableVoices;
     const match =
       allVoices.find((v) => v.lang.toLowerCase() === langCode.toLowerCase()) ||
-      allVoices.find((v) => v.lang.toLowerCase().startsWith('hi')) ||
+      allVoices.find((v) => v.lang.toLowerCase().replace('_', '-').startsWith('hi')) ||
       allVoices.find((v) => v.lang.toLowerCase().includes('in')) ||
       allVoices[0];
     return match || null;
@@ -192,15 +205,16 @@ export default function InteractiveReader({
       });
     }
 
-    // Determine text to speak
+    // Determine text to speak (Both: speaks Shloka + pauses + speaks Hindi meaning)
     let speechText = '';
     if (vocalVoiceContent === 'original') {
       speechText = targetVerse.originalScript;
     } else if (vocalVoiceContent === 'hindi') {
       speechText = targetVerse.hindiTranslation;
     } else {
-      // Both
-      speechText = `${targetVerse.originalScript}। भावार्थ: ${targetVerse.hindiTranslation}`;
+      // Both: Speaks original verse, then announces and speaks Hindi meaning
+      const hindiPart = targetVerse.hindiTranslation ? `। भावार्थ। ${targetVerse.hindiTranslation}` : '';
+      speechText = `${targetVerse.originalScript}${hindiPart}`;
     }
 
     const utterance = new SpeechSynthesisUtterance(speechText);
@@ -220,12 +234,12 @@ export default function InteractiveReader({
     };
 
     utterance.onend = () => {
-      // If still supposed to be playing, automatically proceed to the next verse
+      // If still playing, automatically proceed to the next verse
       if (isPlayingRef.current) {
         if (index + 1 < verses.length) {
           setTimeout(() => {
             speakVerse(index + 1);
-          }, 600); // Dignified pause between sacred verses
+          }, 800); // Respectful pause between verses
         } else {
           setIsPlaying(false);
         }
@@ -716,6 +730,52 @@ export default function InteractiveReader({
               <span>🎵 Sacred Instrumental (संगीत)</span>
             </button>
           </div>
+
+          {/* Vocal Mode Sub-Options (Shloka + Meaning) */}
+          {audioMode === 'vocal' && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-xs font-black text-[#000000]">वाचन शैली (Voice Content):</span>
+              <button
+                onClick={() => {
+                  setVocalVoiceContent('both');
+                  if (isPlaying) speakVerse(currentVerseIndex);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
+                  vocalVoiceContent === 'both'
+                    ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
+                    : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
+                }`}
+              >
+                ✨ श्लोक + भावार्थ (अर्थ सहित बोलें)
+              </button>
+              <button
+                onClick={() => {
+                  setVocalVoiceContent('original');
+                  if (isPlaying) speakVerse(currentVerseIndex);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
+                  vocalVoiceContent === 'original'
+                    ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
+                    : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
+                }`}
+              >
+                📜 केवल श्लोक
+              </button>
+              <button
+                onClick={() => {
+                  setVocalVoiceContent('hindi');
+                  if (isPlaying) speakVerse(currentVerseIndex);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
+                  vocalVoiceContent === 'hindi'
+                    ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
+                    : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
+                }`}
+              >
+                💡 केवल हिंदी भावार्थ (अर्थ)
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center justify-center space-x-4 mt-3 text-[11px] text-[#241000] font-bold">
             <span>{verses.length} Synced Verses</span>

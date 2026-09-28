@@ -31,7 +31,13 @@ export default function ReaderPage() {
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`/api/reader/${slug}/${chapterNumber}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+      const res = await fetch(`/api/reader/${slug}/${chapterNumber}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
       if (res.status === 403) {
         const forbiddenData = await res.json();
@@ -100,11 +106,11 @@ export default function ReaderPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0e1017] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-serif text-amber-300">Synchronizing Sacred Audio Studio...</p>
-          <p className="text-xs text-stone-500">Loading timestamped verse mappings</p>
+      <div className="min-h-screen bg-[#ea8913] flex items-center justify-center p-4">
+        <div className="bg-[#ffdca3] border-3 border-[#522700] rounded-3xl p-8 text-center space-y-4 shadow-2xl max-w-sm w-full text-[#000000]">
+          <div className="w-12 h-12 border-4 border-[#000000] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-base font-serif font-black text-[#000000]">ॐ Synchronizing Sacred Audio Studio...</p>
+          <p className="text-xs text-[#2b1400] font-bold">Loading timestamped verse recitation and Hindi meaning</p>
         </div>
       </div>
     );
@@ -112,15 +118,15 @@ export default function ReaderPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#0e1017] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[#131620] border border-stone-800 rounded-3xl p-8 text-center space-y-4">
-          <h2 className="text-xl font-serif font-bold text-stone-200">Unable to Load Chapter</h2>
-          <p className="text-xs text-stone-400">{error || 'An unexpected error occurred.'}</p>
+      <div className="min-h-screen bg-[#ea8913] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#ffdca3] border-3 border-[#522700] rounded-3xl p-8 text-center space-y-4 shadow-2xl text-[#000000]">
+          <h2 className="text-xl font-serif font-black text-[#000000]">Unable to Load Chapter</h2>
+          <p className="text-xs text-[#2b1400] font-bold">{error || 'An unexpected error occurred.'}</p>
           <a
             href={`/book/${slug}`}
-            className="inline-block py-2.5 px-5 bg-amber-500 text-stone-950 font-bold text-xs rounded-xl"
+            className="inline-block py-2.5 px-6 bg-[#1f0f00] text-[#ffd99e] font-black text-xs rounded-xl border-2 border-[#522700] shadow-lg"
           >
-            Back to Book
+            ← Back to Book
           </a>
         </div>
       </div>
