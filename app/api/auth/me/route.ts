@@ -5,47 +5,50 @@ import { User } from '@/models';
 
 export async function GET(req: NextRequest) {
   try {
-    await connectToDatabase();
-    let user = await getCurrentUser(req);
-
-    // If no user found, return a default seeker session for instant interactive demo
-    if (!user) {
-      let defaultUser = await User.findOne({ email: 'seeker@sacredreads.org' }).populate('purchasedBooks');
-      if (!defaultUser) {
-        defaultUser = await User.create({
-          name: 'Devout Seeker',
-          email: 'seeker@sacredreads.org',
-          purchasedBooks: [],
-          bookmarks: [],
-          role: 'user',
+    try {
+      await connectToDatabase();
+      const user = await getCurrentUser(req);
+      if (user) {
+        return NextResponse.json({
+          authenticated: true,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            purchasedBooks: user.purchasedBooks,
+            bookmarks: user.bookmarks,
+          },
         });
       }
-      return NextResponse.json({
-        authenticated: false,
-        user: {
-          id: defaultUser._id,
-          name: defaultUser.name,
-          email: defaultUser.email,
-          role: defaultUser.role,
-          purchasedBooks: defaultUser.purchasedBooks,
-          bookmarks: defaultUser.bookmarks,
-        },
-      });
+    } catch (dbErr) {
+      console.warn('Auth DB check notice (falling back to guest session):', dbErr);
     }
 
+    // Default guest session fallback
     return NextResponse.json({
-      authenticated: true,
+      authenticated: false,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        purchasedBooks: user.purchasedBooks,
-        bookmarks: user.bookmarks,
+        id: 'guest_seeker',
+        name: 'Devout Seeker',
+        email: 'seeker@sacredreads.org',
+        role: 'user',
+        purchasedBooks: [],
+        bookmarks: [],
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      authenticated: false,
+      user: {
+        id: 'guest_seeker',
+        name: 'Devout Seeker',
+        email: 'seeker@sacredreads.org',
+        role: 'user',
+        purchasedBooks: [],
+        bookmarks: [],
+      },
+    });
   }
 }
 

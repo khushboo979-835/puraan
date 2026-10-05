@@ -296,11 +296,15 @@ export default function InteractiveReader({
       if (voice) bhavarthUtterance.voice = voice;
 
       bhavarthUtterance.onend = () => {
+        if (!isPlayingRef.current) return;
         advanceToNextVerse(index);
       };
 
-      bhavarthUtterance.onerror = (e) => {
-        console.warn('Bhavarth recitation notice:', e);
+      bhavarthUtterance.onerror = (e: any) => {
+        // If user stopped/cancelled, do nothing!
+        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') {
+          return;
+        }
         advanceToNextVerse(index);
       };
 
@@ -309,14 +313,14 @@ export default function InteractiveReader({
 
     // Helper to advance to next verse
     const advanceToNextVerse = (curIdx: number) => {
-      if (isPlayingRef.current) {
-        if (curIdx + 1 < verses.length) {
-          nextVerseTimerRef.current = setTimeout(() => {
-            speakVerse(curIdx + 1);
-          }, 750); // Respectful pause between verses
-        } else {
-          stopAllAudioAndRecitation();
-        }
+      if (!isPlayingRef.current) return;
+      if (curIdx + 1 < verses.length) {
+        nextVerseTimerRef.current = setTimeout(() => {
+          if (!isPlayingRef.current) return;
+          speakVerse(curIdx + 1);
+        }, 750); // Respectful pause between verses
+      } else {
+        stopAllAudioAndRecitation();
       }
     };
 
@@ -338,6 +342,7 @@ export default function InteractiveReader({
         if (vocalVoiceContent === 'both') {
           // Pause 450ms before explaining meaning
           stageTimerRef.current = setTimeout(() => {
+            if (!isPlayingRef.current) return;
             speakBhavarthStage();
           }, 450);
         } else {
@@ -345,8 +350,11 @@ export default function InteractiveReader({
         }
       };
 
-      shlokaUtterance.onerror = (e) => {
-        console.warn('Shloka recitation notice:', e);
+      shlokaUtterance.onerror = (e: any) => {
+        // If user stopped/cancelled, do nothing!
+        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') {
+          return;
+        }
         if (vocalVoiceContent === 'both') {
           speakBhavarthStage();
         } else {
@@ -466,24 +474,27 @@ export default function InteractiveReader({
     }
   };
 
-  // Auto-Save Reading Bookmark
-  const saveBookmark = async (sentenceId?: string, timestamp?: number) => {
+  // Auto-Save Reading Bookmark locally and sync silently
+  const saveBookmark = (sentenceId?: string, timestamp?: number) => {
     const sId = sentenceId || activeSentenceId || 'start';
     const ts = timestamp !== undefined ? timestamp : currentTime;
 
     try {
-      localStorage.setItem(
-        `sacred_progress_${slug}`,
-        JSON.stringify({
-          bookId: book._id,
-          chapterNumber,
-          sentenceId: sId,
-          audioTimestamp: ts,
-          updatedAt: new Date().toISOString(),
-        })
-      );
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          `sacred_progress_${slug}`,
+          JSON.stringify({
+            bookId: book._id,
+            chapterNumber,
+            sentenceId: sId,
+            audioTimestamp: ts,
+            updatedAt: new Date().toISOString(),
+          })
+        );
+      }
 
-      await fetch('/api/bookmarks', {
+      // Silent non-blocking sync with catch
+      fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -492,13 +503,8 @@ export default function InteractiveReader({
           sentenceId: sId,
           audioTimestamp: ts,
         }),
-      });
-
-      setBookmarkSavedToast(true);
-      setTimeout(() => setBookmarkSavedToast(false), 2000);
-    } catch (e) {
-      console.warn('Bookmark save error:', e);
-    }
+      }).catch(() => {});
+    } catch (e) {}
   };
 
   // Typography font size mapping
