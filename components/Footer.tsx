@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, ShieldCheck, Heart } from 'lucide-react';
+import { BookOpen, ShieldCheck, Heart, MapPin, Phone, Mail } from 'lucide-react';
 
 export default function Footer() {
   const religions = [
@@ -34,7 +34,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          {/* Col 1: Overview */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <div className="w-7 h-7 bg-[#1f0f00] rounded-lg flex items-center justify-center text-[#ffd99e] font-black">
@@ -51,6 +52,7 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Col 2: Faith Portals */}
           <div>
             <h4 className="font-black text-[#000000] uppercase tracking-wider mb-3 text-sm">Faith Portals</h4>
             <ul className="space-y-2 font-bold text-[#1a0e02]">
@@ -87,6 +89,7 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Col 3: Explore Sanctuary */}
           <div>
             <h4 className="font-black text-[#000000] uppercase tracking-wider mb-3 text-sm">Explore Sanctuary</h4>
             <ul className="space-y-2 font-bold text-[#1a0e02]">
@@ -118,15 +121,45 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-black text-[#000000] uppercase tracking-wider mb-3 text-sm">DRM & Architecture</h4>
-            <div className="p-3.5 bg-[#ffdca3] rounded-xl border-2 border-[#522700] space-y-2">
-              <p className="text-[11px] text-[#000000] font-bold">
-                ⚡ <strong>Zero Lag Promise:</strong> We never stream heavy 800-page scanned PDFs. Chapters are delivered via lightweight micro-JSON with sub-second audio timestamps.
-              </p>
-              <p className="text-[11px] text-[#241000] font-black">
-                pdf-lib Dynamic DRM Stamping Engine Active
-              </p>
+          {/* Col 4: Office & Contact Information */}
+          <div className="space-y-3">
+            <h4 className="font-black text-[#000000] uppercase tracking-wider mb-3 text-sm">Office & Contact (कार्यालय)</h4>
+            <div className="p-3.5 bg-[#ffdca3] rounded-2xl border-2 border-[#522700] space-y-3 text-xs">
+              <div className="flex items-start space-x-2.5 text-[#000000]">
+                <MapPin className="w-4 h-4 text-[#1f0f00] flex-shrink-0 mt-0.5 stroke-[2.5]" />
+                <div>
+                  <span className="font-black block text-[11px] uppercase tracking-wider text-[#3d1e00]">Office Address:</span>
+                  <p className="font-bold text-xs text-[#000000] leading-snug">
+                    Near Zero Mile Metro Station, Patna, Bihar - 800007, India
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2.5 text-[#000000] pt-2 border-t border-[#522700]/30">
+                <Phone className="w-4 h-4 text-[#1f0f00] flex-shrink-0 stroke-[2.5]" />
+                <div>
+                  <span className="font-black block text-[10px] uppercase tracking-wider text-[#3d1e00]">Contact / Helpline:</span>
+                  <a
+                    href="tel:+917488482052"
+                    className="font-black text-xs text-[#000000] hover:underline"
+                  >
+                    +91-74884-82052
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2.5 text-[#000000] pt-2 border-t border-[#522700]/30">
+                <Mail className="w-4 h-4 text-[#1f0f00] flex-shrink-0 stroke-[2.5]" />
+                <div>
+                  <span className="font-black block text-[10px] uppercase tracking-wider text-[#3d1e00]">Support Email:</span>
+                  <a
+                    href="mailto:support@gyandharam.com"
+                    className="font-bold text-xs text-[#000000] hover:underline"
+                  >
+                    support@gyandharam.com
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
