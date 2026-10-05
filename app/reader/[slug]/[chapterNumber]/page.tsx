@@ -59,7 +59,7 @@ export default function ReaderPage() {
             chapterNumber,
             title: `Chapter ${chapterNumber}`,
             audioUrl: '',
-            verses: [],
+            verses: bookFallback?.chapters.find((c) => c.chapterNumber === chapterNumber)?.verses || [],
           },
           locked: true,
         });

@@ -10,7 +10,7 @@ interface AmbientSoundscapeProps {
   initialVolume?: number;
 }
 
-export default function AmbientSoundscape({ initialSound = 'none', initialVolume = 0.35 }: AmbientSoundscapeProps) {
+export default function AmbientSoundscape({ initialSound = 'none', initialVolume = 0.25 }: AmbientSoundscapeProps) {
   const [activeSound, setActiveSound] = useState<AmbientSoundType>(initialSound);
   const [volume, setVolume] = useState<number>(initialVolume);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,10 +45,22 @@ export default function AmbientSoundscape({ initialSound = 'none', initialVolume
     },
   };
 
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (activeSound === 'none') {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.currentTime = 0;
         setIsPlaying(false);
       }
       return;
@@ -66,7 +78,7 @@ export default function AmbientSoundscape({ initialSound = 'none', initialVolume
         .play()
         .then(() => setIsPlaying(true))
         .catch((e) => {
-          console.log('Audio autoplay prevented, user interaction required:', e);
+          console.log('Audio autoplay prevented or paused:', e);
           setIsPlaying(false);
         });
     }
@@ -78,68 +90,61 @@ export default function AmbientSoundscape({ initialSound = 'none', initialVolume
     }
   }, [volume]);
 
-  const togglePlayState = () => {
-    if (!audioRef.current || activeSound === 'none') {
-      setActiveSound('temple_bells');
-      return;
-    }
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().then(() => setIsPlaying(true));
-    }
-  };
-
   return (
     <div className="relative inline-block">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
           activeSound !== 'none' && isPlaying
-            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-            : 'bg-stone-800/80 hover:bg-stone-700/80 text-stone-300 border border-stone-700'
+            ? 'bg-[#1f0f00] text-[#ffd99e] border-2 border-black shadow-md'
+            : 'bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] border-2 border-[#522700]'
         }`}
-        title="Toggle Ambient Soundscape"
+        title="Toggle Ambient Soundscape (पृष्ठभूमि संगीत)"
       >
-        <Sparkles className={`w-3.5 h-3.5 ${isPlaying ? 'text-amber-400 animate-spin' : 'text-stone-400'}`} />
+        <Sparkles className={`w-3.5 h-3.5 stroke-[2.5] ${isPlaying ? 'text-[#ffdc82] animate-spin' : 'text-[#000000]'}`} />
         <span className="hidden sm:inline">
-          {activeSound === 'none' ? 'Ambient Sound' : SOUND_SOURCES[activeSound as keyof typeof SOUND_SOURCES]?.label.split(' ')[0]}
+          {activeSound === 'none' ? '🎵 Ambient Sound' : SOUND_SOURCES[activeSound as keyof typeof SOUND_SOURCES]?.label.split(' ')[0]}
         </span>
-        {activeSound !== 'none' && (
+        {activeSound !== 'none' && isPlaying && (
           <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 bottom-full mb-3 w-72 p-4 rounded-2xl bg-[#151821] border border-amber-900/40 shadow-2xl z-50 backdrop-blur-xl text-stone-200 animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-800">
+        <div className="absolute right-0 top-full mt-2 w-72 p-4 rounded-2xl bg-[#ffdca3] border-3 border-[#522700] shadow-2xl z-50 text-[#000000] animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between pb-2.5 border-b-2 border-[#522700]">
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-200">Devotional Soundscape</h4>
+              <Sparkles className="w-4 h-4 text-[#000000]" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-[#000000]">Devotional Soundscape</h4>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-stone-400 hover:text-stone-200 text-xs px-1.5 py-0.5 rounded"
+              className="text-[#000000] hover:bg-[#ffebc2] text-xs font-black px-2 py-0.5 rounded-lg border border-[#522700]"
             >
               ✕
             </button>
           </div>
 
-          <div className="space-y-2 my-3">
+          <div className="space-y-1.5 my-3">
             <button
-              onClick={() => setActiveSound('none')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition ${
+              onClick={() => {
+                setActiveSound('none');
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  setIsPlaying(false);
+                }
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition border-2 ${
                 activeSound === 'none'
-                  ? 'bg-stone-800 text-stone-200 font-semibold border border-stone-700'
-                  : 'text-stone-400 hover:bg-stone-900/60'
+                  ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                  : 'bg-[#fff4d6] border-[#522700] text-[#000000] hover:bg-[#ffebbf]'
               }`}
             >
-              <span>Silence (No Ambient)</span>
-              {activeSound === 'none' && <span className="text-amber-400">✓</span>}
+              <span>🔇 Silence (No Background Music)</span>
+              {activeSound === 'none' && <span className="text-[#ffd99e]">✓</span>}
             </button>
 
             {(Object.keys(SOUND_SOURCES) as Array<keyof typeof SOUND_SOURCES>).map((key) => {
@@ -152,28 +157,28 @@ export default function AmbientSoundscape({ initialSound = 'none', initialVolume
                   onClick={() => {
                     setActiveSound(key);
                   }}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs text-left transition ${
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs text-left font-black transition border-2 ${
                     isSelected
-                      ? 'bg-amber-500/15 border border-amber-500/40 text-amber-200 font-medium'
-                      : 'hover:bg-stone-800/60 text-stone-300'
+                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
+                      : 'bg-[#fff4d6] border-[#522700] text-[#000000] hover:bg-[#ffebbf]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-amber-400' : 'text-stone-400'}`} />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-[#ffd99e]' : 'text-[#000000]'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="truncate font-medium">{item.label}</p>
-                    <p className="text-[10px] text-stone-400 truncate">{item.description}</p>
+                    <p className="truncate font-black">{item.label}</p>
+                    <p className="text-[10px] opacity-80 truncate">{item.description}</p>
                   </div>
-                  {isSelected && <span className="text-amber-400 text-xs">✓</span>}
+                  {isSelected && <span className="text-[#ffd99e] text-xs">✓</span>}
                 </button>
               );
             })}
           </div>
 
           {activeSound !== 'none' && (
-            <div className="pt-3 border-t border-stone-800/80 space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-stone-400">
+            <div className="pt-2.5 border-t-2 border-[#522700] space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-black text-[#000000]">
                 <span className="flex items-center space-x-1.5">
-                  <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                  <Volume2 className="w-3.5 h-3.5 text-[#000000]" />
                   <span>Ambient Volume</span>
                 </span>
                 <span>{Math.round(volume * 100)}%</span>
@@ -185,7 +190,7 @@ export default function AmbientSoundscape({ initialSound = 'none', initialVolume
                 step="0.05"
                 value={volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                className="w-full h-2 bg-[#fff4d6] border border-[#522700] rounded-lg appearance-none cursor-pointer accent-[#1f0f00]"
               />
             </div>
           )}
