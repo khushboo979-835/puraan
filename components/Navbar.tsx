@@ -3,28 +3,36 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, User, Menu, X, Sparkles, ChevronDown, Flame, Radio, Bookmark, Volume2, ShieldCheck, LogOut } from 'lucide-react';
+import {
+  Search,
+  User,
+  Menu,
+  X,
+  Sparkles,
+  ChevronDown,
+  Flame,
+  Radio,
+  Bookmark,
+  Volume2,
+  ShieldCheck,
+  LogOut,
+  Headphones,
+  BookOpen,
+  Info
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import MegaMenu from '@/components/MegaMenu';
 import CommandPaletteModal from '@/components/CommandPaletteModal';
-import SabhaRoomDrawer from '@/components/SabhaRoomDrawer';
-import MyShelfDrawer from '@/components/MyShelfDrawer';
-import AboutUsModal from '@/components/AboutUsModal';
-import AudioStudioDrawer from '@/components/AudioStudioDrawer';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, login, logout } = useAuth();
 
-  // Modals & Drawers State
+  // Modals & Menu State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [sabhaRoomOpen, setSabhaRoomOpen] = useState(false);
-  const [myShelfOpen, setMyShelfOpen] = useState(false);
-  const [aboutUsOpen, setAboutUsOpen] = useState(false);
-  const [audioStudioOpen, setAudioStudioOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
@@ -65,52 +73,71 @@ export default function Navbar() {
               <Link
                 href="/"
                 className={`text-sm transition-all duration-200 ${
-                  pathname === '/' ? 'text-[#FEF3C7] font-bold text-shadow-gold' : 'text-stone-300 hover:text-[#F59E0B]'
+                  pathname === '/'
+                    ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                    : 'text-stone-300 hover:text-[#F59E0B]'
                 }`}
               >
                 Home
               </Link>
 
-              {/* Sacred Library Mega Menu Trigger */}
+              {/* Sacred Library Link + Mega Menu */}
               <div
                 className="relative"
                 onMouseEnter={() => setMegaMenuOpen(true)}
+                onMouseLeave={() => setMegaMenuOpen(false)}
               >
-                <button
-                  onClick={() => setMegaMenuOpen(!megaMenuOpen)}
-                  className="text-sm text-stone-300 hover:text-[#F59E0B] transition flex items-center gap-1 font-medium py-2"
+                <Link
+                  href="/library"
+                  className={`text-sm transition-all duration-200 flex items-center gap-1 py-2 font-medium ${
+                    pathname === '/library' || pathname === '/catalog'
+                      ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                      : 'text-stone-300 hover:text-[#F59E0B]'
+                  }`}
                 >
                   <span>Sacred Library</span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${megaMenuOpen ? 'rotate-180 text-amber-400' : ''}`} />
-                </button>
+                </Link>
 
                 <MegaMenu isOpen={megaMenuOpen} onClose={() => setMegaMenuOpen(false)} />
               </div>
 
-              {/* Interactive Audio (Vani) Trigger */}
-              <button
-                onClick={() => setAudioStudioOpen(true)}
-                className="text-sm text-stone-300 hover:text-[#F59E0B] transition flex items-center gap-1.5 font-medium"
+              {/* Interactive Audio (Vani) URL Link */}
+              <Link
+                href="/interactive-audio"
+                className={`text-sm transition-all duration-200 flex items-center gap-1.5 font-medium ${
+                  pathname === '/interactive-audio'
+                    ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                    : 'text-stone-300 hover:text-[#F59E0B]'
+                }`}
               >
                 <span>Interactive Audio (Vani)</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-ping" />
-              </button>
+              </Link>
 
-              {/* My Shelf Trigger */}
-              <button
-                onClick={() => setMyShelfOpen(true)}
-                className="text-sm text-stone-300 hover:text-[#F59E0B] transition font-medium"
+              {/* My Shelf URL Link */}
+              <Link
+                href="/my-shelf"
+                className={`text-sm transition-all duration-200 font-medium ${
+                  pathname === '/my-shelf'
+                    ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                    : 'text-stone-300 hover:text-[#F59E0B]'
+                }`}
               >
                 My Shelf
-              </button>
+              </Link>
 
-              {/* About Us Trigger */}
-              <button
-                onClick={() => setAboutUsOpen(true)}
-                className="text-sm text-stone-300 hover:text-[#F59E0B] transition font-medium"
+              {/* About Us URL Link */}
+              <Link
+                href="/about"
+                className={`text-sm transition-all duration-200 font-medium ${
+                  pathname === '/about'
+                    ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                    : 'text-stone-300 hover:text-[#F59E0B]'
+                }`}
               >
                 About Us
-              </button>
+              </Link>
 
               {/* Command Palette Trigger (Cmd+K) */}
               <button
@@ -125,17 +152,17 @@ export default function Navbar() {
 
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center space-x-3.5">
-              {/* Join Sabha / Room ↗ Button */}
-              <button
-                onClick={() => setSabhaRoomOpen(true)}
-                className="btn-gold-glow flex items-center space-x-1.5 px-5 py-2.5 rounded-full text-xs font-bold shadow-lg text-[#0A0908]"
+              {/* Join Sabha / Room ↗ Button Link */}
+              <Link
+                href="/sabha"
+                className="btn-gold-glow flex items-center space-x-1.5 px-5 py-2.5 rounded-full text-xs font-bold shadow-lg text-[#0A0908] hover:scale-105 transition"
               >
                 <Radio className="w-3.5 h-3.5 animate-pulse" />
                 <span>Join Sabha / Room</span>
                 <span className="text-xs">↗</span>
-              </button>
+              </Link>
 
-              {/* User Profile Avatar / Dropdown */}
+              {/* User Profile Avatar / Dropdown Link */}
               {user ? (
                 <div className="relative">
                   <button
@@ -158,16 +185,23 @@ export default function Navbar() {
                         <span className="text-[10px] text-stone-400 block truncate">{user.email}</span>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          setMyShelfOpen(true);
-                        }}
+                      <Link
+                        href="/profile"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="w-full text-left px-3 py-2 text-xs text-stone-300 hover:text-amber-200 hover:bg-[#20180F] rounded-lg transition flex items-center gap-2"
+                      >
+                        <User className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Profile & Sadhana</span>
+                      </Link>
+
+                      <Link
+                        href="/my-shelf"
+                        onClick={() => setProfileDropdownOpen(false)}
                         className="w-full text-left px-3 py-2 text-xs text-stone-300 hover:text-amber-200 hover:bg-[#20180F] rounded-lg transition flex items-center gap-2"
                       >
                         <Bookmark className="w-3.5 h-3.5 text-amber-400" />
                         <span>My Reading Shelf</span>
-                      </button>
+                      </Link>
 
                       <button
                         onClick={() => {
@@ -183,13 +217,13 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setAuthModalOpen(true)}
+                <Link
+                  href="/profile"
                   className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#3A2A1A] to-[#18130E] border border-[#F59E0B]/50 flex items-center justify-center text-[#FEF3C7] hover:border-[#FEF3C7] hover:scale-105 transition shadow-sm"
-                  title="Devout Sign In"
+                  title="Devout Profile / Sign In"
                 >
                   <User className="w-4 h-4 text-[#F59E0B]" />
-                </button>
+                </Link>
               )}
             </div>
 
@@ -203,12 +237,12 @@ export default function Navbar() {
                 <Search className="w-4 h-4 text-amber-400" />
               </button>
 
-              <button
-                onClick={() => setSabhaRoomOpen(true)}
+              <Link
+                href="/sabha"
                 className="btn-gold-glow px-3 py-1.5 rounded-full text-xs font-bold text-[#0A0908]"
               >
                 <span>Sabha ↗</span>
-              </button>
+              </Link>
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -232,7 +266,7 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/catalog"
+              href="/library"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
             >
@@ -240,124 +274,48 @@ export default function Navbar() {
               <span className="text-xs text-amber-400">6 Traditions</span>
             </Link>
 
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setAudioStudioOpen(true);
-              }}
-              className="w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
+            <Link
+              href="/interactive-audio"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
             >
               <span>Interactive Audio (Vani)</span>
-              <span className="text-xs text-amber-400">Live Player 🎧</span>
-            </button>
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+            </Link>
 
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setMyShelfOpen(true);
-              }}
-              className="w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
+            <Link
+              href="/my-shelf"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
             >
               <span>My Shelf</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setAboutUsOpen(true);
-              }}
-              className="w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
             >
-              <span>About Us & Authenticity</span>
-            </button>
+              <span>About Us</span>
+            </Link>
+
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E1710]"
+            >
+              <span>Devout Profile</span>
+              <User className="w-4 h-4 text-amber-400" />
+            </Link>
           </div>
         )}
       </header>
 
-      {/* Global Modals & Drawers */}
+      {/* Global Command Palette Modal (Cmd+K) */}
       <CommandPaletteModal
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
-        onPlayAudio={(title, url) => {
-          setCommandPaletteOpen(false);
-          setAudioStudioOpen(true);
-        }}
       />
-
-      <SabhaRoomDrawer
-        isOpen={sabhaRoomOpen}
-        onClose={() => setSabhaRoomOpen(false)}
-      />
-
-      <MyShelfDrawer
-        isOpen={myShelfOpen}
-        onClose={() => setMyShelfOpen(false)}
-        onPlayAudio={() => {
-          setMyShelfOpen(false);
-          setAudioStudioOpen(true);
-        }}
-      />
-
-      <AboutUsModal
-        isOpen={aboutUsOpen}
-        onClose={() => setAboutUsOpen(false)}
-      />
-
-      <AudioStudioDrawer
-        isOpen={audioStudioOpen}
-        onClose={() => setAudioStudioOpen(false)}
-      />
-
-      {/* Devout Sign In Modal */}
-      {authModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm bento-card rounded-3xl p-6 shadow-2xl text-stone-200 border border-[#F59E0B]/40">
-            <div className="flex justify-between items-center pb-3 border-b border-stone-800">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-[#F59E0B]" />
-                <h3 className="font-heading font-bold text-xl text-[#FEF3C7]">Seeker Sign In</h3>
-              </div>
-              <button
-                onClick={() => setAuthModalOpen(false)}
-                className="text-stone-400 hover:text-stone-100 font-bold text-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleLoginSubmit} className="space-y-4 my-4">
-              <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">Your Full Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ramesh Chandra"
-                  value={authName}
-                  onChange={(e) => setAuthName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-stone-300 mb-1">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="seeker@gyandharam.com"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn-gold-glow w-full py-2.5 font-bold rounded-xl text-xs shadow-lg text-[#0A0908]"
-              >
-                Enter Sacred Library
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }
