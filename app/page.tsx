@@ -14,10 +14,12 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
-  Clock,
   Radio,
   Flame,
-  Star
+  Star,
+  Compass,
+  Layers,
+  Award
 } from 'lucide-react';
 import { SEED_BOOKS } from '@/lib/seedData';
 import { useAuth } from '@/context/AuthContext';
@@ -32,16 +34,17 @@ interface FaithPortalInfo {
   symbol: string;
   count: string;
   desc: string;
+  tagline: string;
 }
 
 const FAITH_PORTALS: FaithPortalInfo[] = [
-  { id: 'All', name: 'All Wisdom', symbol: '✦', count: '6 Faiths', desc: 'Universal Archive' },
-  { id: 'Hinduism', name: 'Sanatan Dharma', symbol: 'ॐ', count: '18 Puranas & Gita', desc: 'Vedas, Puranas & Gita' },
-  { id: 'Islam', name: 'Islamic Granth', symbol: '☪', count: '114 Surahs', desc: 'Quran & Hadith' },
-  { id: 'Christianity', name: 'Christian Bible', symbol: '✝', count: '66 Books (KJV)', desc: 'Psalms & Gospels' },
-  { id: 'Sikhism', name: 'Sikh Granth', symbol: 'ੴ', count: '1,430 Angs', desc: 'Guru Granth Sahib' },
-  { id: 'Buddhism', name: 'Buddha Vaani', symbol: '☸', count: '423 Verses', desc: 'Dhammapada & Suttas' },
-  { id: 'Jainism', name: 'Jain Darshan', symbol: '卐', count: '357 Sutras', desc: 'Tattvartha Sutra' },
+  { id: 'All', name: 'All Traditions', symbol: '✦', count: '6 Faiths', desc: 'Universal Archive', tagline: 'Universal Wisdom' },
+  { id: 'Hinduism', name: 'Sanatan Dharma', symbol: 'ॐ', count: '18 Puranas & Gita', desc: 'Vedas, Puranas & Gita', tagline: 'Vedic Knowledge & Yoga' },
+  { id: 'Islam', name: 'Islam', symbol: '☪', count: '114 Surahs', desc: 'Quran & Hadith', tagline: 'Divine Guidance & Peace' },
+  { id: 'Christianity', name: 'Christianity', symbol: '✝', count: '66 Books (KJV)', desc: 'Psalms & Gospels', tagline: 'Grace, Love & Truth' },
+  { id: 'Sikhism', name: 'Sikhism', symbol: 'ੴ', count: '1,430 Angs', desc: 'Guru Granth Sahib', tagline: 'Universal Oneness & Service' },
+  { id: 'Buddhism', name: 'Buddhism', symbol: '☸', count: '423 Verses', desc: 'Dhammapada & Suttas', tagline: 'Mindfulness & Nirvana' },
+  { id: 'Jainism', name: 'Jainism', symbol: '卐', count: '357 Sutras', desc: 'Tattvartha Sutra', tagline: 'Non-Violence & Truth' },
 ];
 
 export default function HomePage() {
@@ -81,41 +84,45 @@ export default function HomePage() {
       : SEED_BOOKS.filter((b) => b.religion === selectedReligion);
 
   return (
-    <div className="min-h-screen bg-[#0A0908] text-[#FEF3C7] pb-24 px-4 sm:px-6 lg:px-8 max-w-[1440px] mx-auto">
-      {/* ── BENTO HERO SECTION ─────────────────────────────────── */}
-      <section className="pt-4 sm:pt-6 pb-6 sm:pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
-          {/* Hero Left Bento Panel */}
-          <div className="lg:col-span-6 rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-[#1C1611]/95 via-[#130F0C]/95 to-[#0B0907] border border-[#F59E0B]/30 p-7 sm:p-10 lg:p-11 flex flex-col justify-between relative shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden">
-            {/* Ambient Lighting */}
-            <div className="absolute top-0 left-0 w-80 h-80 bg-[#F59E0B]/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#0A0908] text-[#FEF3C7] pb-28 relative overflow-hidden">
+      {/* ── AMBIENT GOLD BACKGROUND GLOW & PARTICLES ───────────── */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#F59E0B]/12 via-[#D97706]/5 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-48 left-10 w-96 h-96 bg-[#F59E0B]/6 rounded-full blur-[100px] pointer-events-none -z-10" />
+      <div className="absolute top-48 right-10 w-96 h-96 bg-[#D97706]/6 rounded-full blur-[100px] pointer-events-none -z-10" />
 
-            <div className="relative z-10">
-              {/* Top Tag Pill */}
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#1A130C] border border-[#F59E0B]/40 text-[10px] sm:text-[11px] font-semibold tracking-wider text-[#FEF3C7] uppercase mb-6 sm:mb-8 shadow-inner">
-                <span>UNIVERSAL MULTI-FAITH SCRIPTURES • AUDIO SYNCED</span>
-                <Headphones className="w-3 h-3 text-[#F59E0B]" />
-              </div>
-
-              {/* Serif Headline with Gold highlights */}
-              <h1 className="font-heading text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-bold text-[#FFFBEB] tracking-tight leading-[1.16] mb-5">
-                Dharmik Granth <br />
-                Padhne Aur Sunne Ka <br />
-                <span className="gold-gradient-text">Pavitra Sangrah</span>
-              </h1>
-
-              {/* Subtitle */}
-              <p className="text-stone-300/90 text-xs sm:text-[13px] sm:leading-relaxed font-normal max-w-lg mb-8">
-                Sabhi dharmo ke mool granth ek hi jagah. Aawaz ke sath real-time line highlighting,
-                shuddh ucharan aur secure offline reading.
-              </p>
+      {/* ── HERO SHOWCASE SECTION (Unified Luxury Composition) ─── */}
+      <section className="pt-8 sm:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-12 items-center">
+          
+          {/* Left Column: Editorial Grand Typography */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            {/* Top Pill Tag */}
+            <div className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-[#18130E]/90 border border-[#F59E0B]/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] backdrop-blur-xl">
+              <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-ping" />
+              <span className="text-[11px] sm:text-xs font-bold tracking-wider text-[#FEF3C7] uppercase font-sans">
+                Universal Multi-Faith Digital Library & Voice Reader
+              </span>
+              <Headphones className="w-3.5 h-3.5 text-[#F59E0B]" />
             </div>
 
-            {/* CTAs */}
-            <div className="relative z-10 flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
+            {/* Grand Serif Headline */}
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-[56px] font-bold text-[#FFFBEB] tracking-tight leading-[1.12]">
+              Dharmik Granth <br />
+              Padhne Aur Sunne Ka <br />
+              <span className="gold-gradient-text text-shadow-gold">Pavitra Sangrah</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-xl font-sans font-normal">
+              Sabhi dharmo ke mool granth ek hi sthan par. Aawaz ke sath real-time line-by-line
+              highlighting, shuddh Sanskrit/Arabic/Pali ucharan aur certified critical manuscripts.
+            </p>
+
+            {/* CTAs Row */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link
                 href="/reader/agni-puran/1"
-                className="btn-gold-glow inline-flex items-center space-x-2 px-6 sm:px-7 py-3 rounded-full text-xs sm:text-sm font-bold text-[#0A0908] shadow-xl hover:scale-105 transition-all"
+                className="btn-gold-glow inline-flex items-center space-x-2.5 px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-[#0A0908] shadow-[0_10px_30px_rgba(245,158,11,0.4)] hover:scale-105 transition-all"
               >
                 <span>Listen & Read Now 🎧</span>
                 <span className="text-xs font-black">↗</span>
@@ -123,90 +130,117 @@ export default function HomePage() {
 
               <button
                 onClick={() => setAudioStudioOpen(true)}
-                className="text-xs sm:text-sm font-semibold text-[#FEF3C7] hover:text-[#F59E0B] transition flex items-center space-x-1.5 py-2"
+                className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-full bg-[#18130E] hover:bg-[#2A1F13] border border-[#F59E0B]/40 hover:border-[#F59E0B] text-xs sm:text-sm font-bold text-[#FEF3C7] transition-all shadow-md"
               >
                 <Play className="w-3.5 h-3.5 fill-[#FEF3C7]" />
                 <span>Play Free Chapter 1</span>
               </button>
+
+              <button
+                onClick={() => setCommandPaletteOpen(true)}
+                className="inline-flex items-center space-x-1.5 text-xs text-stone-400 hover:text-amber-300 font-semibold px-2 py-1 transition"
+              >
+                <Search className="w-3.5 h-3.5 text-[#F59E0B]" />
+                <span>Explore by Chant (⌘K)</span>
+              </button>
+            </div>
+
+            {/* Trust Metrics Bar */}
+            <div className="pt-6 border-t border-stone-800/80 flex flex-wrap items-center gap-6 sm:gap-10 text-xs text-stone-400">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-[#F59E0B]" />
+                <span><strong>6 Traditions</strong> Unified</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+                <span><strong>1,480+ Seekers</strong> Chanting Now</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Award className="w-4 h-4 text-[#F59E0B]" />
+                <span><strong>BORI & SGPC</strong> Certified</span>
+              </div>
             </div>
           </div>
 
-          {/* Hero Right Bento Panel (Gyan Jyoti 3D Flame Orb) */}
-          <div className="lg:col-span-6 rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-[#18130E]/95 via-[#100D0A]/95 to-[#080706] border border-[#F59E0B]/30 relative overflow-hidden flex items-center justify-center p-2 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] min-h-[360px] sm:min-h-[440px]">
-            {/* 3D Realistic Gyan Jyoti Image */}
-            <div className="relative w-full h-full max-h-[440px] flex items-center justify-center">
+          {/* Right Column: Seamless 3D Gyan Jyoti Flame Sanctuary */}
+          <div className="lg:col-span-5 relative flex items-center justify-center">
+            {/* Ambient Radial Halo */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#F59E0B]/20 via-[#D97706]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+            {/* Orb Container (Seamless transparent blend without box borders) */}
+            <div className="relative w-full max-w-[440px] aspect-square flex items-center justify-center group">
               <img
                 src="/gyan-jyoti-hero.jpg"
                 alt="Gyan Jyoti Sacred Flame Orb"
-                className="w-full h-full max-h-[420px] object-contain rounded-2xl drop-shadow-[0_0_40px_rgba(245,158,11,0.35)]"
+                className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(245,158,11,0.45)] group-hover:scale-105 transition-transform duration-700 rounded-full"
               />
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* ── FAITH-PORTALS SELECTOR & SEARCH CAPSULE ────────────────── */}
-      <section className="relative z-20 my-4 sm:my-6 flex flex-col items-center">
-        {/* Faith Icons Curved Bar */}
-        <div className="flex items-center justify-center gap-2 sm:gap-3 p-1.5 rounded-2xl bg-[#14100C]/90 border border-[#F59E0B]/35 backdrop-blur-xl shadow-2xl mb-4 overflow-x-auto max-w-full">
-          {FAITH_PORTALS.map((portal) => {
-            const isSelected = selectedReligion === portal.id;
-            return (
-              <button
-                key={portal.id}
-                onClick={() => setSelectedReligion(portal.id)}
-                className={`w-11 h-11 sm:w-13 sm:h-13 rounded-xl flex items-center justify-center text-lg sm:text-xl transition-all duration-300 relative flex-shrink-0 ${
-                  isSelected
-                    ? 'bg-gradient-to-b from-[#382A1A] to-[#1A130C] text-[#FEF3C7] border-1.5 border-[#F59E0B] shadow-[0_0_22px_rgba(245,158,11,0.45)] scale-105'
-                    : 'bg-[#18120C]/60 text-stone-300 hover:text-[#FEF3C7] border border-stone-800/80 hover:border-[#F59E0B]/40 hover:bg-[#221910]'
-                }`}
-                title={`${portal.name} (${portal.count})`}
-              >
-                <span className="font-serif select-none">{portal.symbol}</span>
-                {isSelected && (
-                  <span className="absolute -bottom-1 w-2.5 h-0.5 bg-[#F59E0B] rounded-full shadow-[0_0_8px_#F59E0B]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+      {/* ── FLOATING FAITH SELECTOR & SEARCH CAPSULE ───────────────── */}
+      <section className="relative z-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto my-6">
+        <div className="bento-card-active rounded-3xl p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] border border-[#F59E0B]/40 flex flex-col items-center space-y-3.5 backdrop-blur-2xl">
+          
+          {/* Faith Buttons Pills */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 w-full overflow-x-auto py-1">
+            {FAITH_PORTALS.map((portal) => {
+              const isSelected = selectedReligion === portal.id;
+              return (
+                <button
+                  key={portal.id}
+                  onClick={() => setSelectedReligion(portal.id)}
+                  className={`px-3.5 sm:px-4 py-2 rounded-2xl flex items-center space-x-2 transition-all duration-300 flex-shrink-0 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-[#0A0908] font-bold shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-105'
+                      : 'bg-[#18130E] text-stone-300 hover:text-white border border-stone-800/80 hover:border-[#F59E0B]/50'
+                  }`}
+                >
+                  <span className="text-base sm:text-lg font-serif">{portal.symbol}</span>
+                  <span className="text-xs font-semibold">{portal.name}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Search Capsule Bar with Instant Voice/Chant Trigger */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="w-full max-w-xl mx-auto flex items-center bg-[#14100C]/95 border border-[#F59E0B]/40 rounded-full p-1.5 shadow-[0_10px_35px_rgba(0,0,0,0.7)] backdrop-blur-xl transition hover:border-[#F59E0B]"
-        >
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Explore Shloka, Aayat, Granth..."
-            className="w-full bg-transparent pl-5 pr-3 py-2 text-xs sm:text-sm text-stone-100 placeholder-stone-400 focus:outline-none font-normal"
-          />
-
-          <button
-            type="button"
-            onClick={() => setCommandPaletteOpen(true)}
-            className="flex-shrink-0 inline-flex items-center space-x-2 px-4 sm:px-5 py-2 rounded-full bg-gradient-to-r from-[#2C2217] via-[#201911] to-[#16110B] border border-[#F59E0B]/50 hover:border-[#F59E0B] text-[#FEF3C7] hover:text-white text-xs font-semibold shadow-md transition-all group"
+          {/* Search Capsule Bar */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="w-full flex items-center bg-[#100D0A] border border-[#F59E0B]/30 rounded-full p-1.5 shadow-inner transition hover:border-[#F59E0B]/70"
           >
-            <div className="w-5 h-5 rounded-full bg-[#F59E0B] text-[#0A0908] flex items-center justify-center font-bold text-[10px] group-hover:scale-110 transition-transform">
-              <Mic className="w-3 h-3 text-[#0A0908]" />
-            </div>
-            <span className="hidden xs:inline">Search by Chant</span>
-            <span className="xs:hidden">Search</span>
-          </button>
-        </form>
+            <Search className="w-4 h-4 text-amber-400 ml-4 mr-2 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search any shloka, aayat, psalm, pauri, or sutra... (e.g. Agni Puran, Quran, Gita)"
+              className="w-full bg-transparent pr-3 py-2 text-xs sm:text-sm text-stone-100 placeholder-stone-500 focus:outline-none font-normal"
+            />
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex-shrink-0 inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-[#0A0908] text-xs font-bold shadow-md hover:scale-105 transition"
+            >
+              <Mic className="w-3.5 h-3.5 text-[#0A0908]" />
+              <span className="hidden sm:inline">Search by Chant</span>
+              <span className="sm:hidden">Search</span>
+            </button>
+          </form>
+
+        </div>
       </section>
 
-      {/* ── COMPREHENSIVE MULTI-FAITH SCRIPTURE CARDS (Bento Grid) ─── */}
-      <section className="mt-8 relative">
-        <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#F59E0B]/20">
+      {/* ── MULTI-FAITH SCRIPTURES BENTO GRID ───────────────────────── */}
+      <section className="mt-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#F59E0B]/20">
           <div>
-            <h2 className="font-heading font-bold text-xl sm:text-2xl text-[#FFFBEB]">
-              {selectedReligion === 'All' ? 'Featured Sacred Scriptures' : `${selectedReligion} Granth Archives`}
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-[#FFFBEB]">
+              {selectedReligion === 'All' ? 'Universal Sacred Library' : `${selectedReligion} Granth Archives`}
             </h2>
-            <p className="text-xs text-stone-400 mt-0.5">
-              Verified original manuscripts with line-by-line vocal recitation & translations
+            <p className="text-xs sm:text-sm text-stone-400 mt-1">
+              {FAITH_PORTALS.find((p) => p.id === selectedReligion)?.tagline || 'Verified manuscripts with line-by-line vocal recitation'}
             </p>
           </div>
 
@@ -214,12 +248,13 @@ export default function HomePage() {
             href="/catalog"
             className="text-xs font-bold text-[#F59E0B] hover:text-white flex items-center gap-1 transition"
           >
-            <span>View All ({SEED_BOOKS.length})</span>
+            <span>Explore All Granthas</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {/* Bento Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredBooks.map((book) => {
             const isPlayingThis = activeTrack?.slug === book.slug;
             const bookId = (book as any)._id || (book as any).id || book.slug;
@@ -228,31 +263,30 @@ export default function HomePage() {
             return (
               <div
                 key={book.slug}
-                className="bento-card hover:border-[#F59E0B]/60 rounded-3xl p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between group shadow-xl relative overflow-hidden"
+                className="bento-card hover:border-[#F59E0B]/60 rounded-3xl p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between group shadow-2xl relative overflow-hidden"
               >
                 <div>
-                  {/* Top Cover Visual with Gold Frame */}
-                  <div className="w-full h-44 rounded-2xl overflow-hidden mb-4 relative border border-[#F59E0B]/30 bg-[#1A140F]">
+                  {/* Cover Preview */}
+                  <div className="w-full h-48 rounded-2xl overflow-hidden mb-4 relative border border-[#F59E0B]/25 bg-[#14100C]">
                     <img
                       src={book.coverImageUrl}
                       alt={book.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
 
-                    {/* Religion Pill */}
+                    {/* Badge */}
                     <div className="absolute top-3 left-3">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#0A0908] bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] px-2.5 py-1 rounded-full shadow-md">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#0A0908] bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] px-3 py-1 rounded-full shadow-md">
                         {book.religion}
                       </span>
                     </div>
 
-                    {/* Free Ch 1 / Unlocked badge */}
                     <div className="absolute top-3 right-3 flex gap-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900/90 text-emerald-200 border border-emerald-500/40 backdrop-blur-xs">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/40 backdrop-blur-xs">
                         Ch 1 Free
                       </span>
                       {owned && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900/90 text-amber-200 border border-amber-500/40">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 text-amber-200 border border-amber-600/40">
                           Unlocked
                         </span>
                       )}
@@ -272,7 +306,7 @@ export default function HomePage() {
                     {book.description}
                   </p>
 
-                  {/* Rating & Chapters info */}
+                  {/* Rating & Chapters */}
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-stone-800 text-xs text-stone-400">
                     <div className="flex items-center space-x-1 text-amber-400 font-bold">
                       <Star className="w-3.5 h-3.5 fill-[#F59E0B]" />
@@ -282,20 +316,20 @@ export default function HomePage() {
                     <span className="text-[#FEF3C7] font-bold">₹{book.price}</span>
                   </div>
 
-                  {/* Soundwave equalizer indicator */}
+                  {/* Equalizer */}
                   <div className="flex items-center justify-center space-x-1 h-5 my-3 bg-[#110E0B] rounded-lg p-1 border border-stone-800/80">
-                    {[...Array(8)].map((_, i) => (
+                    {[...Array(10)].map((_, i) => (
                       <div
                         key={i}
                         className={`w-1 rounded-full bg-[#F59E0B] transition-all duration-300 ${
-                          isPlayingThis ? `animate-wave-${(i % 5) + 1}` : 'h-1.5 opacity-30'
+                          isPlayingThis ? `animate-wave-${(i % 5) + 1}` : 'h-1.5 opacity-25'
                         }`}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* Dual Action CTAs */}
+                {/* Action Buttons */}
                 <div className="flex items-center gap-2 mt-2">
                   <Link
                     href={`/reader/${book.slug}/1`}
@@ -307,7 +341,7 @@ export default function HomePage() {
 
                   <button
                     onClick={() => handlePlayCardAudio(book)}
-                    className="py-2.5 px-3.5 rounded-xl bg-[#221A12] hover:bg-[#342618] border border-[#F59E0B]/40 text-[#FEF3C7] font-bold text-xs transition flex items-center justify-center space-x-1 shadow-sm"
+                    className="py-2.5 px-3.5 rounded-xl bg-[#201810] hover:bg-[#342415] border border-[#F59E0B]/40 text-[#FEF3C7] font-bold text-xs transition flex items-center justify-center space-x-1 shadow-sm"
                     title="Listen Vani Audio"
                   >
                     <Volume2 className="w-3.5 h-3.5 text-[#F59E0B]" />
@@ -320,13 +354,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── PERSISTENT STICKY BOTTOM AUDIO PLAYER ──────────────────── */}
+      {/* ── PERSISTENT BOTTOM AUDIO PLAYER ─────────────────────────── */}
       <GlobalAudioPlayer
         currentTrack={activeTrack}
         onCloseTrack={() => setActiveTrack(null)}
       />
 
-      {/* Modals */}
+      {/* ── GLOBAL MODALS ──────────────────────────────────────────── */}
       <CommandPaletteModal
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
