@@ -73,6 +73,21 @@ export default function Footer() {
               <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
               <span>Razorpay 256-bit Secured &amp; Watermarked DRM</span>
             </div>
+
+            <div className="pt-1">
+              <a
+                href="https://www.youtube.com/channel/UC0-YBYFqKJRCGfcihn5N3wg"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-600/15 border border-red-500/40 text-red-300 hover:text-white hover:bg-red-600/30 transition-all text-xs font-semibold group shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+              >
+                <svg className="w-4 h-4 text-red-500 fill-current group-hover:scale-110 transition-transform flex-shrink-0" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <span>Subscribe on YouTube</span>
+                <ExternalLink className="w-3 h-3 text-red-400 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
           </div>
 
           {/* Col 2: Navigation & Legal (2 cols) */}
@@ -226,6 +241,26 @@ export default function Footer() {
                   <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">Official Portal:</span>
                   <a href="https://www.gyandharam.com/" className="text-xs text-stone-200 font-medium hover:text-amber-300 transition block">
                     https://www.gyandharam.com/
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2.5 text-stone-300 pt-2.5 border-t border-stone-800">
+                <div className="w-6 h-6 rounded-md bg-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                  <svg className="w-3.5 h-3.5 fill-current text-red-400" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 block">YouTube Channel:</span>
+                  <a
+                    href="https://www.youtube.com/channel/UC0-YBYFqKJRCGfcihn5N3wg"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-red-300 font-bold hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>@GyanDharam Official</span>
+                    <ExternalLink className="w-3 h-3 text-red-400" />
                   </a>
                 </div>
               </div>
