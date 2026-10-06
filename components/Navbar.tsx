@@ -53,17 +53,20 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo & Brand */}
-            <Link href="/" className="flex items-center space-x-2.5 group">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex items-center justify-center border border-[#F59E0B]/60 shadow-md group-hover:scale-105 transition-transform bg-[#18130E]">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex items-center justify-center border-2 border-amber-400/80 shadow-[0_0_18px_rgba(245,158,11,0.45)] group-hover:shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-105 transition-all bg-[#18130E] flex-shrink-0">
                 <img
                   src="/logo.jpg"
                   alt="GyanDharam Brand Flame"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover scale-105"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-heading font-bold text-xl sm:text-2xl tracking-tight gold-gradient-text">
+                <span className="font-heading font-black text-2xl sm:text-[26px] tracking-tight gold-gradient-text leading-none">
                   GyanDharam
+                </span>
+                <span className="text-[10px] text-amber-300/80 font-semibold tracking-wider uppercase mt-0.5 hidden sm:block">
+                  Universal Sanctuary
                 </span>
               </div>
             </Link>

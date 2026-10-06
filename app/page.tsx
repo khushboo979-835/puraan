@@ -175,17 +175,30 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right Column: Seamless 3D Gyan Jyoti Flame Sanctuary */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
-            {/* Ambient Halo */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#F59E0B]/20 via-[#D97706]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+          {/* Right Column: Seamless 3D Gyan Jyoti Flame Sanctuary with Radiant Glowing Lights */}
+          <div className="lg:col-span-5 relative flex items-center justify-center py-4 sm:py-6">
+            {/* Core Intense Ambient Glow */}
+            <div className="absolute w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-gradient-to-r from-amber-500/35 via-yellow-500/25 to-amber-600/35 blur-[80px] animate-celestial-pulse pointer-events-none -z-10" />
+
+            {/* Rotating Golden Aurora / Radiant Rays */}
+            <div className="absolute w-[360px] sm:w-[440px] h-[360px] sm:h-[440px] rounded-full opacity-70 animate-celestial-spin pointer-events-none -z-10">
+              <div className="w-full h-full rounded-full bg-[conic-gradient(from_0deg,rgba(245,158,11,0.45)_0deg,transparent_45deg,rgba(251,191,36,0.5)_90deg,transparent_135deg,rgba(245,158,11,0.45)_180deg,transparent_225deg,rgba(251,191,36,0.5)_270deg,transparent_315deg,rgba(245,158,11,0.45)_360deg)] blur-md" />
+            </div>
+
+            {/* Counter-rotating Golden Sunbeams */}
+            <div className="absolute w-[310px] sm:w-[380px] h-[310px] sm:h-[380px] rounded-full opacity-50 animate-celestial-reverse pointer-events-none -z-10">
+              <div className="w-full h-full rounded-full bg-[conic-gradient(from_45deg,rgba(254,243,199,0.4)_0deg,transparent_30deg,rgba(245,158,11,0.45)_60deg,transparent_90deg,rgba(254,243,199,0.4)_120deg,transparent_150deg,rgba(245,158,11,0.45)_180deg,transparent_210deg,rgba(254,243,199,0.4)_240deg,transparent_270deg,rgba(245,158,11,0.45)_300deg,transparent_330deg,rgba(254,243,199,0.4)_360deg)] blur-xs" />
+            </div>
+
+            {/* Radiant Expanding Ring Pulse */}
+            <div className="absolute w-60 sm:w-72 h-60 sm:h-72 rounded-full border-2 border-amber-400/40 animate-ping opacity-25 pointer-events-none -z-10" />
 
             {/* Orb Container */}
-            <div className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-square flex items-center justify-center group">
+            <div className="relative w-full max-w-[320px] sm:max-w-[370px] aspect-square flex items-center justify-center group z-10">
               <img
                 src="/gyan-jyoti-hero.jpg"
                 alt="Gyan Jyoti Sacred Flame Orb"
-                className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(245,158,11,0.4)] group-hover:scale-105 transition-transform duration-500 rounded-full"
+                className="w-full h-full object-contain drop-shadow-[0_0_55px_rgba(245,158,11,0.6)] group-hover:scale-105 transition-transform duration-500 rounded-full"
               />
             </div>
           </div>

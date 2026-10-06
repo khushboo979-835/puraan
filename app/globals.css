@@ -115,6 +115,51 @@ body {
   animation: goldShimmer 3.5s infinite;
 }
 
+/* Celestial Orb Radiant Animations */
+@keyframes celestialSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes celestialSpinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes celestialPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+    filter: drop-shadow(0 0 45px rgba(245, 158, 11, 0.6));
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    filter: drop-shadow(0 0 80px rgba(251, 191, 36, 0.9));
+  }
+}
+
+@keyframes rayPulse {
+  0%, 100% { opacity: 0.4; transform: rotate(0deg) scale(0.95); }
+  50% { opacity: 0.85; transform: rotate(180deg) scale(1.1); }
+}
+
+.animate-celestial-spin {
+  animation: celestialSpin 24s linear infinite;
+}
+
+.animate-celestial-reverse {
+  animation: celestialSpinReverse 32s linear infinite;
+}
+
+.animate-celestial-pulse {
+  animation: celestialPulse 4s ease-in-out infinite;
+}
+
+.animate-ray-pulse {
+  animation: rayPulse 16s ease-in-out infinite;
+}
+
 /* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -130,3 +175,4 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #D97706;
 }
+
