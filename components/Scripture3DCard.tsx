@@ -109,6 +109,19 @@ export default function Scripture3DCard({
 
   const theme = FAITH_THEMES[book.religion] || FAITH_THEMES.Hinduism;
 
+  const getCoverUrl = () => {
+    const slug = (book.slug || '').toLowerCase();
+    if (slug.includes('quran')) return '/covers/holy-quran.svg';
+    if (slug.includes('gita')) return '/covers/bhagavad-gita.svg';
+    if (slug.includes('bible')) return '/covers/holy-bible.svg';
+    if (slug.includes('japji') || slug.includes('granth')) return '/covers/guru-granth-sahib.svg';
+    if (slug.includes('dhammapada')) return '/covers/dhammapada.svg';
+    if (slug.includes('kalpa') || slug.includes('tattvartha')) return '/covers/kalpa-sutra.svg';
+    if (slug.includes('agni')) return '/covers/agni-puran.svg';
+    if (book.coverImageUrl && book.coverImageUrl.startsWith('/covers/')) return book.coverImageUrl;
+    return '/covers/bhagavad-gita.svg';
+  };
+
   return (
     <div className="bento-card rounded-3xl p-5 border border-[#F59E0B]/25 hover:border-[#F59E0B]/70 transition-all duration-300 hover:-translate-y-2 flex flex-col justify-between group shadow-2xl relative overflow-hidden bg-[#110D0A]">
       <div>
@@ -130,12 +143,14 @@ export default function Scripture3DCard({
             
             {/* Main Cover Image (SVG / Vector) */}
             <img
-              src={book.coverImageUrl || '/covers/bhagavad-gita.svg'}
+              src={getCoverUrl()}
               alt={book.title}
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Fallback graceful SVG rendering if image fails
-                (e.target as HTMLElement).style.display = 'none';
+                const target = e.target as HTMLImageElement;
+                if (target.src !== '/covers/bhagavad-gita.svg') {
+                  target.src = '/covers/bhagavad-gita.svg';
+                }
               }}
             />
           </div>
