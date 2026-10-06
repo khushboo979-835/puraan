@@ -41,7 +41,7 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
   });
 
   // Top header text
-  coverPage.drawText('SACREDREADS • DIGITAL SACRED SCRIPTURE ARCHIVES', {
+  coverPage.drawText('GYANDHARAM.COM • DIGITAL SACRED SCRIPTURE ARCHIVES', {
     x: 100,
     y: pageHeight - 90,
     size: 11,
@@ -248,7 +248,7 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
 
     // Exact watermark line required by user:
     // email, order ID, and the text "Licensed Digital Copy"
-    const footerWatermark = `Licensed Digital Copy • ${userEmail} • Order ID: ${orderId} • SacredReads DRM Protected (Page ${idx + 1} of ${totalPages})`;
+    const footerWatermark = `Licensed Digital Copy • ${userEmail} • Order ID: ${orderId} • GyanDharam.com DRM Protected (Page ${idx + 1} of ${totalPages})`;
 
     page.drawText(footerWatermark, {
       x: 30,

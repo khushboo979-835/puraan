@@ -5,13 +5,17 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'SacredReads | All-Religion Digital Sacred Scripture Bookstore & Audio Reader',
+  metadataBase: new URL('https://www.gyandharam.com'),
+  title: 'GyanDharam | Universal Scripture Library & Audio Synced Reader',
   description:
-    'Experience holy scriptures across Hinduism, Islam, Christianity, Sikhism, Buddhism, and Jainism with interactive synchronized audio recitation and DRM-protected watermarked PDF downloads.',
+    'GyanDharam (gyandharam.com) - Experience holy scriptures across Hinduism, Islam, Christianity, Sikhism, Buddhism, and Jainism with interactive synchronized audio recitation and DRM-protected watermarked PDF downloads.',
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛕</text></svg>',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
   keywords: [
+    'GyanDharam',
+    'gyandharam.com',
     'Agni Puran',
     'Bhagavad Gita',
     'Quran',

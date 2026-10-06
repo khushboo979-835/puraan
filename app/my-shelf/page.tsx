@@ -87,7 +87,7 @@ export default function MyShelfPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `SacredReads_${title.replace(/[^a-zA-Z0-9]/g, '_')}_Watermarked.pdf`;
+      a.download = `GyanDharam_${title.replace(/[^a-zA-Z0-9]/g, '_')}_Watermarked.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

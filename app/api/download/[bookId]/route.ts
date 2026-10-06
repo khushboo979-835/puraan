@@ -78,7 +78,7 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
       .replace(/[^a-zA-Z0-9]/g, '_')
       .slice(0, 30);
 
-    const filename = `SacredReads_${sanitizedTitle}_Watermarked_Licensed.pdf`;
+    const filename = `GyanDharam_${sanitizedTitle}_Watermarked_Licensed.pdf`;
 
     const headers = new Headers();
     headers.set('Content-Type', 'application/pdf');

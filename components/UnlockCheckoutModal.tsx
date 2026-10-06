@@ -73,7 +73,7 @@ export default function UnlockCheckoutModal({ isOpen, onClose, book, onSuccess }
           key: orderData.keyId,
           amount: orderData.amount,
           currency: orderData.currency,
-          name: 'SacredReads',
+          name: 'GyanDharam',
           description: `Digital Access to ${book.title}`,
           order_id: orderData.orderId,
           handler: async function (response: any) {

@@ -37,11 +37,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {/* Col 1: Overview */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 bg-[#1f0f00] rounded-lg flex items-center justify-center text-[#ffd99e] font-black">
-                <BookOpen className="w-4 h-4" />
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 border-[#522700] bg-[#1f0f00]">
+                <img src="/logo.jpg" alt="GyanDharam Logo" className="w-full h-full object-cover" />
               </div>
-              <span className="font-heading font-black text-[#000000] text-base">SacredReads</span>
+              <div>
+                <span className="font-heading font-black text-[#000000] text-lg block">GyanDharam</span>
+                <span className="text-[10px] text-[#241000] font-black block -mt-1">gyandharam.com</span>
+              </div>
             </div>
             <p className="text-[#1a0e02] font-bold text-xs leading-relaxed">
               Dharmik granth padhne aur sunne ka pavitra sangrah. Chapter 1 is always free. Chapter 2+ unlocks lifetime synchronized audio reading and personal DRM watermarked PDF downloads.
@@ -165,7 +168,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 border-t-2 border-[#522700] flex flex-col sm:flex-row items-center justify-between text-[#000000] font-bold gap-4">
-          <p>© {new Date().getFullYear()} SacredReads. All sacred scriptures preserved with reverence.</p>
+          <p>© {new Date().getFullYear()} GyanDharam (gyandharam.com). All sacred scriptures preserved with reverence.</p>
           <div className="flex items-center space-x-1">
             <span>Crafted for spiritual seekers worldwide</span>
             <Heart className="w-3.5 h-3.5 text-[#3b1c00] fill-[#3b1c00]" />

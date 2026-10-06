@@ -51,15 +51,19 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-11 h-11 rounded-2xl bg-[#1f0f00] p-0.5 shadow-md flex items-center justify-center text-[#ffd99e] border-2 border-[#522700] group-hover:scale-105 transition-transform">
-                <BookOpen className="w-6 h-6 stroke-[2.2]" />
+              <div className="w-12 h-12 rounded-full overflow-hidden shadow-md flex items-center justify-center border-2 border-[#522700] group-hover:scale-105 transition-transform bg-[#1f0f00]">
+                <img
+                  src="/logo.jpg"
+                  alt="GyanDharam Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <span className="font-heading font-black text-xl sm:text-2xl tracking-tight text-[#000000]">
-                  SacredReads
+                  GyanDharam
                 </span>
-                <p className="text-[11px] text-[#241000] font-bold tracking-normal -mt-0.5">
-                  Universal Digital Scripture Library
+                <p className="text-[10px] sm:text-[11px] text-[#241000] font-black tracking-normal -mt-0.5">
+                  Universal Scripture Library • Audio Synced
                 </p>
               </div>
             </Link>
