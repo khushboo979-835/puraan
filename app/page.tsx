@@ -25,6 +25,7 @@ import GlobalAudioPlayer, { GlobalAudioTrack } from '@/components/GlobalAudioPla
 import CommandPaletteModal from '@/components/CommandPaletteModal';
 import AudioStudioDrawer from '@/components/AudioStudioDrawer';
 import UnlockCheckoutModal from '@/components/UnlockCheckoutModal';
+import Scripture3DCard from '@/components/Scripture3DCard';
 
 interface FaithPortalInfo {
   id: string;
@@ -268,98 +269,13 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredBooks.map((book) => {
             const isPlayingThis = activeTrack?.slug === book.slug;
-            const bookId = (book as any)._id || (book as any).id || book.slug;
-            const owned = bookId ? isPurchased(bookId) : false;
-
             return (
-              <div
+              <Scripture3DCard
                 key={book.slug}
-                className="bento-card hover:border-[#F59E0B]/60 rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between group shadow-2xl relative overflow-hidden"
-              >
-                <div>
-                  {/* High-res Cover Preview */}
-                  <div className="w-full h-44 rounded-2xl overflow-hidden mb-4 relative border border-[#F59E0B]/25 bg-[#14100C]">
-                    <img
-                      src={book.coverImageUrl}
-                      alt={book.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-
-                    {/* Faith Pill */}
-                    <div className="absolute top-3 left-3">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#0A0908] bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] px-3 py-1 rounded-full shadow-md">
-                        {book.religion}
-                      </span>
-                    </div>
-
-                    <div className="absolute top-3 right-3 flex gap-1">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-600/40 backdrop-blur-xs">
-                        Ch 1 Free
-                      </span>
-                      {owned && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 text-amber-200 border border-amber-600/40">
-                          Unlocked
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Title & Metadata */}
-                  <h3 className="font-heading font-bold text-lg text-[#FFFBEB] group-hover:text-amber-300 transition-colors line-clamp-1">
-                    {book.title}
-                  </h3>
-
-                  <p className="text-xs text-amber-200/80 font-medium mt-0.5 line-clamp-1">
-                    {book.author} • {book.language}
-                  </p>
-
-                  <p className="text-xs text-stone-300/85 mt-2 line-clamp-2 leading-relaxed font-normal">
-                    {book.description}
-                  </p>
-
-                  {/* Rating & Chapters */}
-                  <div className="flex items-center justify-between mt-3.5 pt-2.5 border-t border-stone-800 text-xs text-stone-400">
-                    <div className="flex items-center space-x-1 text-amber-400 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-[#F59E0B]" />
-                      <span>{book.rating}</span>
-                    </div>
-                    <span>{book.totalChapters} Chapters</span>
-                    <span className="text-[#FEF3C7] font-bold">₹{book.price}</span>
-                  </div>
-
-                  {/* Animated Waveform Equalizer */}
-                  <div className="flex items-center justify-center space-x-1 h-5 my-2.5 bg-[#110E0B] rounded-lg p-1 border border-stone-800/80">
-                    {[...Array(10)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-1 rounded-full bg-[#F59E0B] transition-all duration-300 ${
-                          isPlayingThis ? `animate-wave-${(i % 5) + 1}` : 'h-1.5 opacity-25'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dual Action CTAs ("Read Verse" & "Listen 🎧") */}
-                <div className="flex items-center gap-2 mt-1">
-                  <Link
-                    href={`/reader/${book.slug}/1`}
-                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] hover:from-[#FFFFFF] hover:to-[#FBBF24] text-[#0A0908] font-bold text-xs text-center transition flex items-center justify-center space-x-1.5 shadow-md"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-[#0A0908]" />
-                    <span>Read Verse</span>
-                  </Link>
-
-                  <button
-                    onClick={() => handlePlayCardAudio(book)}
-                    className="py-2 px-3.5 rounded-xl bg-[#201810] hover:bg-[#342415] border border-[#F59E0B]/40 text-[#FEF3C7] font-bold text-xs transition flex items-center justify-center space-x-1 shadow-sm"
-                    title="Listen Vani Audio"
-                  >
-                    <Volume2 className="w-3.5 h-3.5 text-[#F59E0B]" />
-                    <span>Listen 🎧</span>
-                  </button>
-                </div>
-              </div>
+                book={book}
+                isPlayingThis={isPlayingThis}
+                onPlayAudio={handlePlayCardAudio}
+              />
             );
           })}
         </div>
