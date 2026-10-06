@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgSikh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#08142A"/>
+      <stop offset="50%" stop-color="#0F2856"/>
+      <stop offset="100%" stop-color="#050C1B"/>
+    </linearGradient>
+    <linearGradient id="goldSikh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF9E0"/>
+      <stop offset="35%" stop-color="#F59E0B"/>
+      <stop offset="70%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+    <filter id="glowSikh" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="800" rx="16" fill="url(#bgSikh)"/>
+
+  <!-- Ornate Brocade Gold Border -->
+  <rect x="24" y="24" width="552" height="752" rx="12" fill="none" stroke="url(#goldSikh)" stroke-width="3" opacity="0.85"/>
+  <rect x="36" y="36" width="528" height="728" rx="8" fill="none" stroke="url(#goldSikh)" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.6"/>
+
+  <!-- Corner Khanda Accents -->
+  <circle cx="50" cy="50" r="14" fill="#091A38" stroke="url(#goldSikh)" stroke-width="2"/>
+  <circle cx="550" cy="50" r="14" fill="#091A38" stroke="url(#goldSikh)" stroke-width="2"/>
+  <circle cx="50" cy="750" r="14" fill="#091A38" stroke="url(#goldSikh)" stroke-width="2"/>
+  <circle cx="550" cy="750" r="14" fill="#091A38" stroke="url(#goldSikh)" stroke-width="2"/>
+
+  <!-- Top Category -->
+  <text x="300" y="105" font-family="'Cinzel', 'Noto Serif', serif" font-size="14" font-weight="bold" fill="#FEF3C7" letter-spacing="6" text-anchor="middle" opacity="0.9">SIKHISM • JAPJI SAHIB &amp; GURBANI</text>
+
+  <!-- Central Glowing Ik Onkar (ੴ) Emblem -->
+  <circle cx="300" cy="235" r="95" fill="#0A1E42" stroke="url(#goldSikh)" stroke-width="2.5" filter="url(#glowSikh)"/>
+  <circle cx="300" cy="235" r="78" fill="none" stroke="url(#goldSikh)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+
+  <!-- Sacred Ik Onkar Symbol -->
+  <text x="300" y="262" font-family="'Mukta Mahee', 'Gurmukhi MN', 'Noto Sans Gurmukhi', sans-serif" font-size="75" font-weight="bold" fill="url(#goldSikh)" text-anchor="middle" filter="url(#glowSikh)">ੴ</text>
+
+  <!-- Grand Titles -->
+  <text x="300" y="415" font-family="'Mukta Mahee', 'Gurmukhi MN', serif" font-size="38" font-weight="bold" fill="url(#goldSikh)" text-anchor="middle" filter="url(#glowSikh)">ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ</text>
+
+  <text x="300" y="470" font-family="'Cinzel', 'Cinzel Decorative', serif" font-size="26" font-weight="bold" fill="#FFFBEB" letter-spacing="2" text-anchor="middle">SRI GURU GRANTH SAHIB (JAPJI SAHIB)</text>
+
+  <line x1="160" y1="505" x2="440" y2="505" stroke="url(#goldSikh)" stroke-width="2" opacity="0.7"/>
+  <polygon points="300,500 306,505 300,510 294,505" fill="url(#goldSikh)"/>
+
+  <!-- Subtitle and Attributes -->
+  <text x="300" y="550" font-family="'Noto Sans', sans-serif" font-size="16" font-weight="bold" fill="#FDE68A" text-anchor="middle">Mool Mantar &amp; 38 Pauris • Gurmukhi &amp; Hindi • Audio Synced 🎧</text>
+  
+  <text x="300" y="585" font-family="'Noto Serif', serif" font-size="14" font-style="italic" fill="#D4D4D8" text-anchor="middle">Sri Guru Nanak Dev Ji • Divine Kirtan Melodies</text>
+
+  <!-- Bottom Badge -->
+  <g transform="translate(300, 680)">
+    <rect x="-140" y="-18" width="280" height="36" rx="18" fill="#08142A" stroke="url(#goldSikh)" stroke-width="1.5"/>
+    <text x="0" y="5" font-family="'Cinzel', serif" font-size="11" font-weight="bold" fill="#FEF3C7" letter-spacing="2" text-anchor="middle">SGPC CERTIFIED 1430 ANG STANDARD</text>
+  </g>
+</svg>
