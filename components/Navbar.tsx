@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, ChevronRight, User, Menu, X, Sparkles, Radio } from 'lucide-react';
+import { Search, User, Menu, X, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
@@ -42,30 +42,25 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 bg-[#0d0c0b]/85 backdrop-blur-xl border-b border-[#e2ab46]/15 shadow-2xl">
+      <header className="sticky top-0 z-50 bg-[#0d0c0b]/95 backdrop-blur-xl border-b border-[#e2ab46]/15 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shadow-lg flex items-center justify-center border border-[#e2ab46]/40 group-hover:scale-105 transition-transform bg-[#1a140e]">
+            <Link href="/" className="flex items-center space-x-2.5 group">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex items-center justify-center border border-[#e2ab46]/50 shadow-md group-hover:scale-105 transition-transform bg-[#18130e]">
                 <img
                   src="/logo.jpg"
                   alt="GyanDharam Logo"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div>
-                <span className="font-heading font-bold text-xl sm:text-2xl tracking-tight gold-gradient-text">
-                  GyanDharam
-                </span>
-                <span className="hidden sm:block text-[10px] text-amber-200/60 font-medium tracking-wide -mt-1">
-                  gyandharam.com
-                </span>
-              </div>
+              <span className="font-heading font-bold text-xl sm:text-2xl tracking-tight text-[#fce8bd] group-hover:text-[#fae0a2] transition-colors">
+                GyanDharam
+              </span>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center space-x-7">
+            <nav className="hidden lg:flex items-center space-x-7">
               {navLinks.map((link) => {
                 const isActive =
                   pathname === link.href || (link.href === '/catalog' && pathname.startsWith('/catalog'));
@@ -73,10 +68,10 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`text-sm font-medium transition-all duration-200 ${
+                    className={`text-sm transition-all duration-200 ${
                       isActive
                         ? 'text-[#fce8bd] font-semibold text-shadow-gold'
-                        : 'text-stone-300 hover:text-[#fae0a2]'
+                        : 'text-stone-300 hover:text-[#fae0a2] font-normal'
                     }`}
                   >
                     {link.name}
@@ -84,39 +79,39 @@ export default function Navbar() {
                 );
               })}
 
-              {/* Search Icon Trigger */}
+              {/* Search Icon */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="text-stone-300 hover:text-[#fae0a2] p-1.5 rounded-full hover:bg-stone-800/40 transition"
+                className="text-stone-300 hover:text-[#fae0a2] p-1.5 transition"
                 title="Search Scriptures"
               >
                 <Search className="w-4 h-4 stroke-[2]" />
               </button>
-            </div>
+            </nav>
 
-            {/* Right Side CTAs & Session */}
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Join Sabha / Room Glowing Gold CTA */}
+            {/* Right CTAs */}
+            <div className="hidden md:flex items-center space-x-3.5">
+              {/* Join Sabha / Room ↗ CTA */}
               <Link
                 href="/reader/agni-puran/1"
-                className="btn-gold-glow flex items-center space-x-2 px-5 py-2.5 rounded-full text-xs font-bold shadow-lg"
+                className="btn-gold-glow flex items-center space-x-1.5 px-5 py-2 rounded-full text-xs font-bold shadow-lg text-[#120b02]"
               >
                 <span>Join Sabha / Room</span>
-                <span className="text-sm">↗</span>
+                <span className="text-xs">↗</span>
               </Link>
 
-              {/* User Profile Avatar */}
+              {/* User Avatar */}
               {user ? (
-                <div className="flex items-center space-x-2 bg-stone-900/80 border border-[#e2ab46]/30 rounded-full pl-1.5 pr-3 py-1">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#b87c1e] to-[#fae0a2] flex items-center justify-center text-[#120b02] font-black text-xs shadow-xs">
+                <div className="flex items-center space-x-2 bg-[#1a140f] border border-[#e2ab46]/40 rounded-full pl-1 pr-2.5 py-1">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#b87c1e] to-[#fae0a2] flex items-center justify-center text-[#120b02] font-black text-xs shadow-sm">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
                   </div>
-                  <span className="text-xs font-medium text-stone-200 truncate max-w-[80px]">
+                  <span className="text-xs font-medium text-stone-200 truncate max-w-[70px]">
                     {user.name?.split(' ')[0]}
                   </span>
                   <button
                     onClick={() => logout()}
-                    className="text-[10px] text-stone-400 hover:text-amber-300 font-bold ml-1"
+                    className="text-[10px] text-stone-400 hover:text-amber-300 ml-1"
                     title="Sign Out"
                   >
                     Exit
@@ -125,16 +120,16 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="w-9 h-9 rounded-full bg-stone-900 border border-[#e2ab46]/40 flex items-center justify-center text-[#fce8bd] hover:border-[#fce8bd] hover:scale-105 transition"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#3a2c1d] to-[#1a140f] border border-[#e2ab46]/50 flex items-center justify-center text-[#fce8bd] hover:border-[#fce8bd] hover:scale-105 transition shadow-sm"
                   title="Sign In"
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 text-[#fae0a2]" />
                 </button>
               )}
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <div className="lg:hidden flex items-center space-x-3">
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden flex items-center space-x-2.5">
               <Link
                 href="/reader/agni-puran/1"
                 className="btn-gold-glow px-3 py-1.5 rounded-full text-xs font-bold text-[#120b02]"
@@ -143,30 +138,30 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-200"
+                className="p-1.5 rounded-xl bg-stone-900 border border-stone-800 text-stone-200"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          {/* Inline Search Bar Dropdown */}
+          {/* Search Dropdown */}
           {searchOpen && (
-            <div className="py-3 pb-4 border-t border-stone-800/80 animate-in fade-in slide-in-from-top-2">
+            <div className="py-3 border-t border-stone-800/80 animate-in fade-in slide-in-from-top-2">
               <form onSubmit={handleNavSearch} className="max-w-2xl mx-auto flex items-center">
-                <div className="relative w-full flex items-center bg-stone-900/90 border border-[#e2ab46]/40 rounded-full overflow-hidden px-4 py-2">
+                <div className="relative w-full flex items-center bg-[#15110d] border border-[#e2ab46]/40 rounded-full overflow-hidden px-4 py-2">
                   <Search className="w-4 h-4 text-amber-400/80 mr-2.5 flex-shrink-0" />
                   <input
                     type="text"
                     value={navSearchQuery}
                     onChange={(e) => setNavSearchQuery(e.target.value)}
-                    placeholder="Search granth, shloka, aayat, ya vachan... (e.g. Agni Puran, Quran, Gita)"
+                    placeholder="Search granth, shloka, aayat, ya vachan..."
                     className="w-full bg-transparent text-xs sm:text-sm text-stone-100 placeholder-stone-400 focus:outline-none"
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className="btn-gold-glow px-4 py-1.5 rounded-full text-xs font-bold ml-2"
+                    className="btn-gold-glow px-4 py-1.5 rounded-full text-xs font-bold ml-2 text-[#120b02]"
                   >
                     Search
                   </button>
@@ -176,7 +171,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Dropdown */}
+        {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#120f0c] border-b border-stone-800 px-4 pt-2 pb-6 space-y-2 text-stone-200">
             {navLinks.map((link) => {
@@ -186,7 +181,7 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition ${
+                  className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition ${
                     isActive
                       ? 'bg-[#221c16] text-[#fae0a2] border border-[#e2ab46]/30'
                       : 'text-stone-300 hover:bg-stone-900'
@@ -197,19 +192,9 @@ export default function Navbar() {
                 </Link>
               );
             })}
-
-            <div className="pt-3 border-t border-stone-800 flex flex-col gap-2">
-              <Link
-                href="/reader/agni-puran/1"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-gold-glow w-full py-2.5 text-center font-bold text-xs rounded-xl"
-              >
-                Join Sabha / Room ↗
-              </Link>
-            </div>
           </div>
         )}
-      </nav>
+      </header>
 
       {/* Auth Modal */}
       {authModalOpen && (
@@ -253,7 +238,7 @@ export default function Navbar() {
 
               <button
                 type="submit"
-                className="btn-gold-glow w-full py-2.5 font-bold rounded-xl text-xs shadow-lg"
+                className="btn-gold-glow w-full py-2.5 font-bold rounded-xl text-xs shadow-lg text-[#120b02]"
               >
                 Continue into Sacred Studio
               </button>
