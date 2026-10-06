@@ -1,3 +1,13 @@
+export interface VerseItem {
+  sentenceId: string;
+  originalScript: string;
+  hindiTranslation: string;
+  englishTranslation: string;
+  transliteration?: string;
+  startTime: number;
+  endTime: number;
+}
+
 export interface SeedBook {
   title: string;
   slug: string;
@@ -20,135 +30,21 @@ export interface SeedBook {
     title: string;
     audioUrl: string;
     summary: string;
-    verses: {
-      sentenceId: string;
-      originalScript: string;
-      hindiTranslation: string;
-      englishTranslation: string;
-      transliteration?: string;
-      startTime: number;
-      endTime: number;
-    }[];
+    verses: VerseItem[];
   }[];
 }
 
 export const SEED_BOOKS: SeedBook[] = [
   {
-    title: 'Agni Puran (अग्नि पुराण)',
-    slug: 'agni-puran',
-    religion: 'Hinduism',
-    language: 'Sanskrit & Hindi',
-    author: 'Maharshi Ved Vyasa / Lord Agni',
-    description: 'The encyclopedic Mahapurana recited by Agni Dev to Sage Vashistha, illuminating cosmology, Vedic science, rituals, medicine, architecture, and the path to ultimate liberation.',
-    synopsis: 'Agni Purana is one of the eighteen major Puranas of Hinduism. Categorized as a Rajasika Purana, it was declared directly by Agni (the Fire God) to Sage Vashistha. Across its chapters, it weaves transcendental knowledge with practical Vedic sciences including Ayurveda, Jyotish (astronomy), Dhanurveda (martial strategy), temple iconography, and the divine incarnations of Vishnu.',
-    coverImageUrl: 'https://images.unsplash.com/photo-1609743522653-52354461eb27?q=80&w=800&auto=format&fit=crop',
-    price: 299,
-    totalChapters: 383,
-    masterPdfKey: 'master-agni-puran.pdf',
-    rating: 4.95,
-    versesCount: 15400,
-    featured: true,
-    authenticitySource: 'Preserved from Varanasi Sanskrit Mahavidyalaya Critical Manuscript Archive #VED-782',
-    audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', // Relaxing devotional flute/chant audio
-    chapters: [
-      {
-        chapterNumber: 1,
-        title: 'अध्याय १: अग्निपुराण माहात्म्य एवं उपोद्घात (Prologue & Cosmic Inception)',
-        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-        summary: 'Sages gather at the holy forest of Naimisharanya and request Suta to impart the supreme, nectar-like wisdom imparted by Lord Agni to Sage Vashistha.',
-        verses: [
-          {
-            sentenceId: 'ap-1-1',
-            originalScript: 'ॐ नमः परमात्मने वासुदेवाय। यतो वा इमानि भूतानि जायन्ते येन जातानि जीवन्ति यत्प्रयन्त्यभिसंविशन्ति॥',
-            hindiTranslation: 'उस सच्चिदानन्दघन परमात्मा वासुदेव को बारंबार नमस्कार है, जिससे यह सम्पूर्ण दृश्य जगत उत्पन्न होता है, जिसके आश्रय से जीवित रहता है और प्रलयकाल में जिसमें विलीन हो जाता है।',
-            englishTranslation: 'Om, salutations unto the Supreme Soul Lord Vasudeva, from Whom all beings are manifested, by Whose grace they live, and into Whom they dissolve.',
-            transliteration: 'Oṃ namaḥ paramātmane vāsudevāya | yato vā imāni bhūtāni jāyante...',
-            startTime: 0.0,
-            endTime: 9.5
-          },
-          {
-            sentenceId: 'ap-1-2',
-            originalScript: 'ऋषयः ऊचुः - सूत जानासि सर्वाणि पुराणादीनि तत्वतः। वद नः पावनं ज्ञानं यज्ज्ञात्वा मुच्यते नरः॥',
-            hindiTranslation: 'शौनक आदि महर्षियों ने कहा—हे परम ज्ञानी सूतजी! आप समस्त इतिहास, वेद और पुराणों के गूढ़ रहस्य को यथार्थ रूप से जानते हैं। कृपा कर हमें वह पवित्रतम ज्ञान प्रदान करें, जिसे जानकर मनुष्य संसार के जन्म-मरण के चक्र से मुक्त हो जाता है।',
-            englishTranslation: 'The venerable Sages said: O wise Suta! You are the master of all sacred Puranas and epics. Narrate unto us that transcendent wisdom by which mortals cross the ocean of samsara.',
-            transliteration: 'Ṛṣayaḥ ūcuḥ - sūta jānāsi sarvāṇi purāṇādīni tattvataḥ | vada naḥ pāvanaṃ jñānaṃ...',
-            startTime: 9.6,
-            endTime: 20.8
-          },
-          {
-            sentenceId: 'ap-1-3',
-            originalScript: 'सूत उवाच - शृणुध्वं मुनयः सर्वे अग्निप्रोक्तं महाद्भुतम्। यदाह भगवानग्निर्वसिष्ठाय महात्मने॥',
-            hindiTranslation: 'सूतजी ने विनम्र भाव से कहा—हे तपोधन मुनियों! आप एकाग्रचित्त होकर उस महाअद्भुत अग्निपुराण का श्रवण करें, जिसे साक्षात् भगवान अग्निदेव ने ब्रह्मर्षि वसिष्ठ के पूछने पर कृपापूर्वक कहा था।',
-            englishTranslation: 'Suta replied: Listen with devotion, O revered ascetics, to this most wondrous wisdom revealed directly by the luminous Deity of Fire unto the exalted Sage Vashistha.',
-            transliteration: 'Sūta uvāca - śṛṇudhvaṃ munayaḥ sarve agniproktam mahādbhutam...',
-            startTime: 20.9,
-            endTime: 32.4
-          },
-          {
-            sentenceId: 'ap-1-4',
-            originalScript: 'विद्यासारं परं ब्रह्म द्विविधं तन्निबोधत। परा चैवापरा चैव ब्रह्मविद्या हि शौनका॥',
-            hindiTranslation: 'हे शौनक! ज्ञानियों ने समस्त विद्याओं का सारभूत दो प्रकार का ज्ञान बताया है—एक परा विद्या (आत्मज्ञान/ब्रह्मज्ञान) और दूसरी अपरा विद्या (वेद-वेदांग व लौकिक विज्ञान)।',
-            englishTranslation: 'Know, O Shaunaka, that the supreme repository of all learning is twofold: Para (the eternal transcendental self-realization) and Apara (the empirical and liturgical sciences).',
-            transliteration: 'Vidyāsāraṃ paraṃ brahma dvividhaṃ tannibodhata | parā caivāparā caiva...',
-            startTime: 32.5,
-            endTime: 44.0
-          },
-          {
-            sentenceId: 'ap-1-5',
-            originalScript: 'अग्निपुराणमतुलं सर्वकामप्रदायकम्। पठतां शृण्वतां नृणां भुक्तिमुक्तिप्रदायकम्॥',
-            hindiTranslation: 'यह अनुपम अग्निपुराण धर्म, अर्थ, काम और मोक्ष—चारों पुरुषार्थों को देने वाला है। श्रद्धापूर्वक इसका पाठ अथवा श्रवण करने वाले साधक को इहलोक में सर्वविध सुख तथा परलोक में अक्षय मोक्ष की प्राप्ति होती है।',
-            englishTranslation: 'This matchless Agni Purana fulfills all righteous desires. Those who read and listen with devotion attain prosperous joy in this life and supreme spiritual liberation hereafter.',
-            transliteration: 'Agnipurāṇamatulaṃ sarvakāmapradāyakam | paṭhatāṃ śṛṇvatāṃ nṛṇāṃ...',
-            startTime: 44.1,
-            endTime: 56.2
-          },
-          {
-            sentenceId: 'ap-1-6',
-            originalScript: 'य इदं धारयेन्नित्यं प्रातरुत्थाय मानवः। सर्वपापविनिर्मुक्तो विष्णुलोके महीयते॥',
-            hindiTranslation: 'जो मनुष्य ब्रह्ममुहूर्त में उठकर नित्य इस पावन ज्ञान का स्मरण एवं चिंतन करता है, वह जन्म-जन्मांतर के समस्त पाप-तापों से मुक्त होकर भगवान श्रीहरि के परम वैकुण्ठ धाम में प्रतिष्ठित होता है।',
-            englishTranslation: 'Whosoever awakens at dawn and meditates upon these sacred verses is liberated from all bondages of karma and abides forever in the luminous realm of Vishnu.',
-            transliteration: 'Ya idaṃ dhārayennityaṃ prātarutthāya mānavaḥ | sarvapāpavirmukto viṣṇuloke...',
-            startTime: 56.3,
-            endTime: 68.0
-          }
-        ]
-      },
-      {
-        chapterNumber: 2,
-        title: 'अध्याय २: मत्स्यावतार एवं प्रलय कथा (The Matsya Incarnation & The Great Deluge)',
-        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-        summary: 'The divine descent of Lord Vishnu as the golden horned Fish (Matsya Avatar) to rescue King Satyavrata, the seeds of life, and the sacred Vedas during the cosmic deluge.',
-        verses: [
-          {
-            sentenceId: 'ap-2-1',
-            originalScript: 'अग्निस्वाहा वदाम्यद्य मत्स्याख्यानं पुरातनम्। सत्यव्रतस्य राजर्षेः उद्धारार्थं यथाऽभवत्॥',
-            hindiTranslation: 'भगवान अग्निदेव ने कहा—अब मैं आपको भगवान के प्रथम मत्स्यावतार की पुरातन कथा सुनाता हूँ, जो राजर्षि सत्यव्रत तथा वेदों के उद्धार हेतु प्रकट हुए थे।',
-            englishTranslation: 'Lord Agni said: Now I shall narrate the primordial descent of Lord Matsya, who manifested to salvage Rajarshi Satyavrata and the eternal Vedic truths.',
-            startTime: 0.0,
-            endTime: 12.0
-          },
-          {
-            sentenceId: 'ap-2-2',
-            originalScript: 'कृतमालाजलस्पर्शे यदा राजा स्थितोऽभवत्। कराञ्जलौ लघुः मत्स्यः प्रादुर्भूतः कृपानिधिः॥',
-            hindiTranslation: 'जब राजा सत्यव्रत कृतमाला नदी में जलांजलि दे रहे थे, तब उनकी हथेली में एक अत्यंत छोटा, स्वर्णिम मत्स्य रूप धारण कर कृपानिधान प्रकट हुए।',
-            englishTranslation: 'When King Satyavrata offered water libations at the river Kritamala, the compassionate Lord appeared as a tiny golden fish nestled in his palms.',
-            startTime: 12.1,
-            endTime: 24.5
-          }
-        ]
-      }
-    ]
-  },
-  {
     title: 'Shrimad Bhagavad Gita (श्रीमद्भगवद्गीता)',
     slug: 'bhagavad-gita',
     religion: 'Hinduism',
     language: 'Sanskrit & Hindi',
-    author: 'Bhagavan Sri Krishna',
-    description: 'The timeless spiritual dialogue between Lord Krishna and Arjuna on the battlefield of Kurukshetra, revealing Karma Yoga, Bhakti Yoga, and Jnana Yoga.',
+    author: 'Bhagavan Sri Krishna / Maharshi Ved Vyasa',
+    description: 'The supreme spiritual dialogue between Lord Krishna and Arjuna on the battlefield of Kurukshetra, revealing Karma Yoga, Bhakti Yoga, and Jnana Yoga.',
     synopsis: 'The Bhagavad Gita is a 700-verse Hindu scripture that is part of the epic Mahabharata. It presents a synthesis of Hindu ideas about dharma, theistic bhakti, and the yogic paths to moksha.',
     coverImageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800&auto=format&fit=crop',
-    price: 349,
+    price: 49,
     totalChapters: 18,
     masterPdfKey: 'master-bhagavad-gita.pdf',
     rating: 4.99,
@@ -168,6 +64,7 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'धृतराष्ट्र उवाच - धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः। मामकाः पाण्डवाश्चैव किमकुर्वत सञ्जय॥',
             hindiTranslation: 'धृतराष्ट्र ने पूछा—हे संजय! धर्मभूमि कुरुक्षेत्र में युद्ध की इच्छा से एकत्र हुए मेरे और पाण्डु के पुत्रों ने क्या किया?',
             englishTranslation: 'Dhritarashtra said: O Sanjaya, assembled on the sacred plain of Kurukshetra, desirous of fighting, what did my sons and the sons of Pandu do?',
+            transliteration: 'dhṛtarāṣṭra uvāca - dharmakṣetre kurukṣetre samavetā yuyutsavaḥ...',
             startTime: 0.0,
             endTime: 10.5
           },
@@ -176,23 +73,59 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'सञ्जय उवाच - दृष्ट्वा तु पाण्डवानीकं व्यूढं दुर्योधनस्तदा। आचार्यमुपसङ्गम्य राजा वचनमब्रवीत्॥',
             hindiTranslation: 'संजय ने कहा—उस समय राजा दुर्योधन ने व्यूहरचनायुक्त पाण्डवों की सेना को देखकर द्रोणाचार्य के पास जाकर यह वचन कहा।',
             englishTranslation: 'Sanjaya said: Having seen the army of the Pandavas drawn up in battle array, King Duryodhana approached his teacher Drona and spoke these words.',
+            transliteration: 'sañjaya uvāca - dṛṣṭvā tu pāṇḍavānīkaṃ vyūḍhaṃ duryodhanastadā...',
             startTime: 10.6,
             endTime: 21.0
+          },
+          {
+            sentenceId: 'bg-1-3',
+            originalScript: 'पश्यैतां पाण्डुपुत्राणामाचार्य महतीं चमूम्। व्यूढां द्रुपदपुत्रेण तव शिष्येण धीमता॥',
+            hindiTranslation: 'हे आचार्य! आपके बुद्धिमान शिष्य द्रुपदपुत्र (धृष्टद्युम्न) द्वारा व्यूहाकार खड़ी की गई पाण्डुपुत्रों की इस विशाल सेना को देखिए।',
+            englishTranslation: 'Behold, O master, this mighty army of the sons of Pandu, arrayed by the son of Drupada, your talented pupil.',
+            transliteration: 'paśyaitāṃ pāṇḍuputrāṇāmācārya mahatīṃ camūm...',
+            startTime: 21.1,
+            endTime: 32.5
+          }
+        ]
+      },
+      {
+        chapterNumber: 2,
+        title: 'अध्याय २: सांख्ययोग (The Yoga of Pure Knowledge & Karma)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
+        summary: 'Lord Krishna reveals the eternal, indestructible nature of the Soul (Atman) and the divine art of Nishkama Karma Yoga.',
+        verses: [
+          {
+            sentenceId: 'bg-2-1',
+            originalScript: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥',
+            hindiTranslation: 'तेरा केवल कर्म करने में ही अधिकार है, उसके फलों में कभी नहीं। इसलिए तू कर्मफल का हेतु मत बन और न ही तेरी अकर्म में आसक्ति हो।',
+            englishTranslation: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action. Never consider yourself the cause of the results.',
+            transliteration: 'karmaṇyevādhikāraste mā phaleṣu kadācana...',
+            startTime: 0.0,
+            endTime: 12.0
+          },
+          {
+            sentenceId: 'bg-2-2',
+            originalScript: 'नैनं छिन्दन्ति शस्त्राणि नैनं दहति पावकः। न चैनं क्लेदयन्त्यापो न शोषयति मारुतः॥',
+            hindiTranslation: 'इस आत्मा को न शस्त्र काट सकते हैं, न आग जला सकती है, न जल गीला कर सकता है और न वायु सुखा सकती है। यह अमर और शाश्वत है।',
+            englishTranslation: 'Weapons cannot cut the soul, fire cannot burn it, water cannot wet it, nor can the wind dry it. It is eternal and immortal.',
+            transliteration: 'nainaṃ chindanti śastrāṇi nainaṃ dahati pāvakaḥ...',
+            startTime: 12.1,
+            endTime: 24.0
           }
         ]
       }
     ]
   },
   {
-    title: 'The Holy Quran - Surah Al-Fatiha & Al-Baqarah (القرآن الكريم)',
+    title: 'The Holy Quran (القرآن الكريم)',
     slug: 'the-holy-quran',
     religion: 'Islam',
-    language: 'Arabic & Urdu / Hindi',
+    language: 'Arabic & Hindi / English',
     author: 'Divine Revelation to Prophet Muhammad (PBUH)',
-    description: 'The sublime divine revelation providing moral guidance, universal justice, spiritual illumination, and righteous path for humanity.',
+    description: 'The sublime divine revelation providing universal moral guidance, righteous path, mercy, and peace for humanity.',
     synopsis: 'The Holy Quran is the central religious text of Islam, believed by Muslims to be a revelation from God (Allah). Revered for its unsurpassed literary beauty and profound moral teachings.',
     coverImageUrl: 'https://images.unsplash.com/photo-1584286595398-a59f21d313f5?q=80&w=800&auto=format&fit=crop',
-    price: 399,
+    price: 49,
     totalChapters: 114,
     masterPdfKey: 'master-holy-quran.pdf',
     rating: 4.98,
@@ -203,7 +136,7 @@ export const SEED_BOOKS: SeedBook[] = [
     chapters: [
       {
         chapterNumber: 1,
-        title: 'سورة الفاتحة (The Opening - अल-फातिहा)',
+        title: 'سورة الفاتحة (Surah Al-Fatiha - The Opening)',
         audioUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f795cb.mp3',
         summary: 'The Opening Seven Verses of the Quran, praising the Lord of all creation, His boundless mercy, and praying for the straight path.',
         verses: [
@@ -212,6 +145,7 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
             hindiTranslation: 'अल्लाह के नाम से, जो अत्यंत कृपाशील और परम दयालु है।',
             englishTranslation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
+            transliteration: 'Bismillāhir-Raḥmānir-Raḥīm',
             startTime: 0.0,
             endTime: 5.5
           },
@@ -220,6 +154,7 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
             hindiTranslation: 'सब प्रशंसा अल्लाह ही के लिए है जो सारे संसार का पालनहार है।',
             englishTranslation: '[All] praise is [due] to Allah, Lord of the worlds.',
+            transliteration: 'Al-ḥamdu lillāhi Rabbil-ʻālamīn',
             startTime: 5.6,
             endTime: 11.2
           },
@@ -228,6 +163,7 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'الرَّحْمَٰنِ الرَّحِيمِ • مَالِكِ يَوْمِ الدِّينِ',
             hindiTranslation: 'बड़ा दयालु, अति कृपालु, न्याय के दिन का स्वामी।',
             englishTranslation: 'The Entirely Merciful, the Especially Merciful, Sovereign of the Day of Recompense.',
+            transliteration: 'Ar-Raḥmānir-Raḥīm | Māliki yawmid-dīn',
             startTime: 11.3,
             endTime: 18.0
           },
@@ -236,67 +172,41 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ • صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ',
             hindiTranslation: 'हमें सीधे मार्ग पर चला, उन लोगों के मार्ग पर जिन पर तूने कृपा की।',
             englishTranslation: 'Guide us to the straight path - The path of those upon whom You have bestowed favor.',
+            transliteration: 'Ihdinaṣ-ṣirāṭal-mustaqīm...',
             startTime: 18.1,
             endTime: 28.0
           }
         ]
-      }
-    ]
-  },
-  {
-    title: 'Sri Guru Granth Sahib & Japji Sahib (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ)',
-    slug: 'japji-sahib',
-    religion: 'Sikhism',
-    language: 'Gurmukhi & Hindi',
-    author: 'Sri Guru Nanak Dev Ji',
-    description: 'The foundation prayer of Sikh philosophy, proclaiming the Oneness of the Divine (Ik Onkar), truthfulness, divine grace, and cosmic harmony.',
-    synopsis: 'Japji Sahib is the opening holy hymn found at the beginning of Sri Guru Granth Sahib Ji, composed by Guru Nanak Dev Ji. It articulates profound metaphysics of creation, the eternal reality, and honest living.',
-    coverImageUrl: 'https://images.unsplash.com/photo-1590073844006-33379778ae09?q=80&w=800&auto=format&fit=crop',
-    price: 249,
-    totalChapters: 38,
-    masterPdfKey: 'master-japji-sahib.pdf',
-    rating: 4.97,
-    versesCount: 38,
-    featured: true,
-    authenticitySource: 'Shiromani Gurdwara Parbandhak Committee (SGPC) Standard Script',
-    audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-    chapters: [
+      },
       {
-        chapterNumber: 1,
-        title: 'ਮੂਲ ਮੰਤਰ ਅਤੇ ਪਉੜੀ ੧ (Mool Mantar & Pauri 1)',
-        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-        summary: 'The Primordial Declaration of Universal Oneness and the path of abiding by Divine Will.',
+        chapterNumber: 2,
+        title: 'سورة البقرة - آية الكرسي (Ayat Al-Kursi)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f795cb.mp3',
+        summary: 'The Throne Verse - The supreme declaration of God’s eternal existence, power, and sovereign grace.',
         verses: [
           {
-            sentenceId: 'js-1-1',
-            originalScript: 'ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ ॥',
-            hindiTranslation: 'ईश्वर एक है, उसका नाम सत्य है, वह सृष्टिकर्ता है, निर्भय है, निर्वैर है, जिसका स्वरूप काल से परे है, जो अजन्मा है, स्वयंभू है और गुरु की कृपा से प्राप्त होता है।',
-            englishTranslation: 'One Universal Creator God, The Name Is Truth, Creative Being Personified, No Fear, No Hatred, Image Of The Undying, Beyond Birth, Self-Existent, By Guru’s Grace.',
+            sentenceId: 'q-2-1',
+            originalScript: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ',
+            hindiTranslation: 'अल्लाह, जिसके सिवा कोई सच्चा पूज्य नहीं, वह सदा जीवित और सबका थामने वाला है। उसे न तो ऊंघ आती है और न नींद।',
+            englishTranslation: 'Allah! There is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep.',
+            transliteration: 'Allāhu lā ilāha illā huwal-ḥayyul-qayyūm...',
             startTime: 0.0,
             endTime: 14.0
-          },
-          {
-            sentenceId: 'js-1-2',
-            originalScript: '॥ ਜਪੁ ॥ ਆਦਿ ਸਚੁ ਜੁਗਾਦਿ ਸਚੁ ॥ ਹੈ ਭੀ ਸਚੁ ਨਾਨਕ ਹੋਸੀ ਭੀ ਸਚੁ ॥੧॥',
-            hindiTranslation: 'जप: वह परमात्मा सृष्टि के आरम्भ में सत्य था, युगों के आरम्भ में सत्य था, वर्तमान में भी सत्य है और हे नानक! भविष्य में भी सदैव सत्य ही रहेगा।',
-            englishTranslation: 'Chant: True in the Primal Beginning, True through all ages, True even here and now, O Nanak, Forever and ever True.',
-            startTime: 14.1,
-            endTime: 26.5
           }
         ]
       }
     ]
   },
   {
-    title: 'The Book of Psalms & Gospels (पवित्र भजन संहिता)',
+    title: 'The Holy Bible (पवित्र बाइबिल - Psalms & Gospels)',
     slug: 'the-holy-bible-psalms',
     religion: 'Christianity',
     language: 'Hebrew / English & Hindi',
     author: 'King David & Prophets',
-    description: 'Poetic hymns of praise, faith, consolation, forgiveness, and divine refuge in times of trouble and spiritual devotion.',
-    synopsis: 'The Book of Psalms is a collection of 150 ancient devotional lyric songs and prayers expressing the deepest human emotions toward the Almighty Creator.',
+    description: 'Poetic lyric songs and teachings of faith, love, solace, and spiritual sanctuary.',
+    synopsis: 'The Holy Bible is the sacred scripture of Christianity. The Book of Psalms expresses human gratitude, deep devotion, and refuge in the Almighty.',
     coverImageUrl: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=800&auto=format&fit=crop',
-    price: 279,
+    price: 49,
     totalChapters: 150,
     masterPdfKey: 'master-holy-bible.pdf',
     rating: 4.92,
@@ -328,6 +238,84 @@ export const SEED_BOOKS: SeedBook[] = [
             endTime: 22.0
           }
         ]
+      },
+      {
+        chapterNumber: 2,
+        title: 'Gospel of John: प्रारंभ में वचन था (In the Beginning was the Word)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
+        summary: 'The eternal divine Word that brings light and life unto all humankind.',
+        verses: [
+          {
+            sentenceId: 'jn-1-1',
+            originalScript: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
+            hindiTranslation: 'आदि में वचन था, और वचन परमेश्वर के साथ था, और वचन ही परमेश्वर था।',
+            englishTranslation: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
+            startTime: 0.0,
+            endTime: 11.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    title: 'Sri Guru Granth Sahib & Japji Sahib (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ)',
+    slug: 'japji-sahib',
+    religion: 'Sikhism',
+    language: 'Gurmukhi & Hindi',
+    author: 'Sri Guru Nanak Dev Ji',
+    description: 'The foundation prayer of Sikh philosophy, proclaiming Universal Oneness (Ik Onkar), divine grace, and cosmic harmony.',
+    synopsis: 'Japji Sahib is the opening holy hymn found at the beginning of Sri Guru Granth Sahib Ji, composed by Guru Nanak Dev Ji.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1590073844006-33379778ae09?q=80&w=800&auto=format&fit=crop',
+    price: 49,
+    totalChapters: 38,
+    masterPdfKey: 'master-japji-sahib.pdf',
+    rating: 4.97,
+    versesCount: 38,
+    featured: true,
+    authenticitySource: 'Shiromani Gurdwara Parbandhak Committee (SGPC) Standard Script',
+    audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    chapters: [
+      {
+        chapterNumber: 1,
+        title: 'ਮੂਲ ਮੰਤਰ ਅਤੇ ਪਉੜੀ ੧ (Mool Mantar & Pauri 1)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+        summary: 'The Primordial Declaration of Universal Oneness and the path of abiding by Divine Will.',
+        verses: [
+          {
+            sentenceId: 'js-1-1',
+            originalScript: 'ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ ॥',
+            hindiTranslation: 'ईश्वर एक है, उसका नाम सत्य है, वह सृष्टिकर्ता है, निर्भय है, निर्वैर है, जिसका स्वरूप काल से परे है, जो अजन्मा है, स्वयंभू है और गुरु की कृपा से प्राप्त होता है।',
+            englishTranslation: 'One Universal Creator God, The Name Is Truth, Creative Being Personified, No Fear, No Hatred, Image Of The Undying, Beyond Birth, Self-Existent, By Guru’s Grace.',
+            transliteration: 'Ik Oaṅkār Sat Nām Kartā Purakh Nirbhau Nirvair Akāl Mūrat Ajūnī Saibhaṅ Gur Prasād',
+            startTime: 0.0,
+            endTime: 14.0
+          },
+          {
+            sentenceId: 'js-1-2',
+            originalScript: '॥ ਜਪੁ ॥ ਆਦਿ ਸਚੁ ਜੁਗਾਦਿ ਸਚੁ ॥ ਹੈ ਭੀ ਸਚੁ ਨਾਨਕ ਹੋਸੀ ਭੀ ਸਚੁ ॥੧॥',
+            hindiTranslation: 'जप: वह परमात्मा सृष्टि के आरम्भ में सत्य था, युगों के आरम्भ में सत्य था, वर्तमान में भी सत्य है और हे नानक! भविष्य में भी सदैव सत्य ही रहेगा।',
+            englishTranslation: 'Chant: True in the Primal Beginning, True through all ages, True even here and now, O Nanak, Forever and ever True.',
+            transliteration: 'Jap | Ād Sach Jugād Sach | Hai Bhī Sach Nānak Hosī Bhī Sach',
+            startTime: 14.1,
+            endTime: 26.5
+          }
+        ]
+      },
+      {
+        chapterNumber: 2,
+        title: 'ਪਉੜੀ ੨: ਹੁਕਮੀ ਹੋਵਨਿ ਆਕਾਰ (Pauri 2 - The Divine Command)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+        summary: 'All forms and creation are sustained by the supreme Divine Will (Hukam).',
+        verses: [
+          {
+            sentenceId: 'js-2-1',
+            originalScript: 'ਹੁਕਮੀ ਹੋਵਨਿ ਆਕਾਰ ਹੁਕਮੁ ਨ ਕਹਿਆ ਜਾਈ ॥ ਹੁਕਮੀ ਹੋਵਨਿ ਜੀਅ ਹੁਕਮਿ ਮਿਲੈ ਵਡਿਆਈ ॥',
+            hindiTranslation: 'परमात्मा के हुकम (आज्ञा) से ही सब आकार बनते हैं, उसका हुकम कहा नहीं जा सकता। हुकम से ही सब जीव उत्पन्न होते हैं और बड़प्पन पाते हैं।',
+            englishTranslation: 'By His Command, all forms are created; His Command cannot be described. By His Command, souls come into being.',
+            startTime: 0.0,
+            endTime: 15.0
+          }
+        ]
       }
     ]
   },
@@ -337,10 +325,10 @@ export const SEED_BOOKS: SeedBook[] = [
     religion: 'Buddhism',
     language: 'Pali & Hindi',
     author: 'Gautama Buddha',
-    description: 'The golden collection of aphorisms spoken by the Buddha on mindfulness, mental mastery, peace, detachment, and supreme enlightenment (Nirvana).',
+    description: 'The golden collection of aphorisms spoken by the Buddha on mindfulness, peace, compassion, and supreme Nirvana.',
     synopsis: 'The Dhammapada is a collection of sayings of the Buddha in verse form and one of the most widely read Buddhist scriptures from the Khuddaka Nikaya.',
     coverImageUrl: 'https://images.unsplash.com/photo-1548625361-195feee10fce?q=80&w=800&auto=format&fit=crop',
-    price: 249,
+    price: 49,
     totalChapters: 26,
     masterPdfKey: 'master-dhammapada.pdf',
     rating: 4.96,
@@ -353,13 +341,14 @@ export const SEED_BOOKS: SeedBook[] = [
         chapterNumber: 1,
         title: 'यमकवग्गो (युगल वर्ग - Yamaka Vagga: The Twin Verses)',
         audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-        summary: 'The nature of mind: thoughts precede deeds, and purity of mind brings abiding joy.',
+        summary: 'The nature of mind: thoughts precede deeds, and purity of mind brings abiding peace.',
         verses: [
           {
             sentenceId: 'dp-1-1',
             originalScript: 'मनोपुब्बङ्गमा धम्मा मनोसेट्ठा मनोमया। मनसा चे पदुट्ठेन भासति वा करोति वा। ततो नं दुक्खमन्वेति चक्कं व वहतो पदं॥',
             hindiTranslation: 'सभी मानसिक अवस्थाओं का आधार मन ही है, मन ही उनका प्रधान है और वे मन से ही उत्पन्न होती हैं। यदि कोई दूषित मन से बोलता या कर्म करता है, तो दुःख उसका उसी प्रकार पीछा करता है जैसे बैल के पैर के पीछे गाड़ी का पहिया।',
             englishTranslation: 'Mind precedes all mental states. Mind is their chief; they are all mind-wrought. If with an impure mind a person speaks or acts, suffering follows him like the wheel that follows the foot of the ox.',
+            transliteration: 'Manopubbaṅgamā dhammā manoseṭṭhā manomayā...',
             startTime: 0.0,
             endTime: 14.5
           },
@@ -368,8 +357,25 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'न हि वेरेन वेरानि सम्मन्तीध कुदाचनं। अवेरेन च सम्मन्ति एस धम्मो सनन्तनो॥',
             hindiTranslation: 'इस संसार में बैर से बैर कभी शांत नहीं होता; केवल निर्वैर (प्रेम व करुणा) से ही बैर शांत होता है—यही सनातन धर्म (शाश्वत नियम) है।',
             englishTranslation: 'Hatred does not cease by hatred at any time; hatred ceases only by love. This is an unalterable eternal law.',
+            transliteration: 'Na hi verena verāni sammantīdha kudācanaṃ...',
             startTime: 14.6,
             endTime: 28.0
+          }
+        ]
+      },
+      {
+        chapterNumber: 2,
+        title: 'अप्पमादवग्गो (अप्रमाद वर्ग - Appamada Vagga: Mindfulness)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+        summary: 'Mindfulness is the path to the Deathless; heedlessness is the path of death.',
+        verses: [
+          {
+            sentenceId: 'dp-2-1',
+            originalScript: 'अप्पमादो अमतपदं पमादो मच्चुनो पदं। अप्पमत्ता न मीयन्ति ये पमत्ता यथा मता॥',
+            hindiTranslation: 'अप्रमाद (जागरूकता/सावधानी) अमरता का मार्ग है और प्रमाद (लापरवाही) मृत्यु का मार्ग है। जो जागरूक हैं वे कभी नहीं मरते, जो लापरवाह हैं वे मृत समान हैं।',
+            englishTranslation: 'Mindfulness is the path to the Deathless; heedlessness is the path to death. The mindful do not die, but the heedless are already like the dead.',
+            startTime: 0.0,
+            endTime: 14.0
           }
         ]
       }
@@ -380,11 +386,11 @@ export const SEED_BOOKS: SeedBook[] = [
     slug: 'tattvartha-sutra',
     religion: 'Jainism',
     language: 'Sanskrit & Hindi',
-    author: 'Acharya Umaswati',
-    description: 'The definitive Jain philosophical treatise explaining the nature of reality, non-violence (Ahimsa), karma, right faith, right knowledge, and right conduct.',
+    author: 'Acharya Umaswati / Bhadrabahu',
+    description: 'The definitive Jain philosophical treatise explaining non-violence (Ahimsa), right faith, right knowledge, and right conduct.',
     synopsis: 'Tattvartha Sutra is an ancient Jain text written in Sanskrit by Acharya Umaswati. It is accepted as authoritative by both Digambara and Svetambara traditions.',
     coverImageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop',
-    price: 249,
+    price: 49,
     totalChapters: 10,
     masterPdfKey: 'master-tattvartha-sutra.pdf',
     rating: 4.94,
@@ -404,6 +410,7 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'सम्यग्दर्शनज्ञानचारित्राणि मोक्षमार्गः॥',
             hindiTranslation: 'सम्यक् दर्शन (सच्ची श्रद्धा), सम्यक् ज्ञान (यथार्थ ज्ञान) और सम्यक् चारित्र (सदाचरण)—इन तीनों की एकता ही मोक्ष (परम मुक्ति) का मार्ग है।',
             englishTranslation: 'Right Faith, Right Knowledge, and Right Conduct together constitute the true path to Liberation.',
+            transliteration: 'Samyag-darśana-jñāna-cāritrāṇi mokṣamārgaḥ',
             startTime: 0.0,
             endTime: 9.0
           },
@@ -412,8 +419,71 @@ export const SEED_BOOKS: SeedBook[] = [
             originalScript: 'तत्त्वार्थश्रद्धानं सम्यग्दर्शनम्॥ तन्निसर्गादधिगमाद्वा॥',
             hindiTranslation: 'जीवादि सात तत्त्वों का यथार्थ श्रद्धान करना ही सम्यग्दर्शन है। यह दर्शन स्वभाव से अथवा गुरु के उपदेश से उत्पन्न होता है।',
             englishTranslation: 'Belief in substances (tattvas) ascertained as they are is right faith. It is born either naturally by intuition or through learning.',
+            transliteration: 'Tattvārtha-śraddhānaṃ samyagdarśanam | tannisargādadhigamādvā',
             startTime: 9.1,
             endTime: 20.0
+          }
+        ]
+      },
+      {
+        chapterNumber: 2,
+        title: 'अध्याय २: जीव तत्त्व एवं अहिंसा (Soul & Ahimsa Principle)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+        summary: 'The non-violent essence of all living souls and mutual interdependence of all life.',
+        verses: [
+          {
+            sentenceId: 'ts-2-1',
+            originalScript: 'परस्परोपग्रहो जीवानाम्॥',
+            hindiTranslation: 'सभी जीव एक-दूसरे के उपकार और कल्याण के लिए हैं। परस्पर सहयोग और अहिंसा ही जीवन का मूल आधार है।',
+            englishTranslation: 'Souls render service to one another. Mutual interdependence and non-violence is the fundamental nature of life.',
+            startTime: 0.0,
+            endTime: 10.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    title: 'Agni Puran (अग्नि पुराण)',
+    slug: 'agni-puran',
+    religion: 'Hinduism',
+    language: 'Sanskrit & Hindi',
+    author: 'Maharshi Ved Vyasa / Lord Agni',
+    description: 'The encyclopedic Mahapurana recited by Agni Dev to Sage Vashistha, illuminating cosmology, Vedic science, rituals, and ultimate liberation.',
+    synopsis: 'Agni Purana is one of the eighteen major Puranas of Hinduism. Categorized as a Rajasika Purana, it was declared directly by Agni (the Fire God) to Sage Vashistha.',
+    coverImageUrl: 'https://images.unsplash.com/photo-1609743522653-52354461eb27?q=80&w=800&auto=format&fit=crop',
+    price: 49,
+    totalChapters: 383,
+    masterPdfKey: 'master-agni-puran.pdf',
+    rating: 4.95,
+    versesCount: 15400,
+    featured: true,
+    authenticitySource: 'Varanasi Sanskrit Mahavidyalaya Critical Manuscript Archive',
+    audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    chapters: [
+      {
+        chapterNumber: 1,
+        title: 'अध्याय १: अग्निपुराण माहात्म्य एवं उपोद्घात (Prologue & Cosmic Inception)',
+        audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+        summary: 'Sages gather at the holy forest of Naimisharanya and request Suta to impart the supreme wisdom imparted by Lord Agni.',
+        verses: [
+          {
+            sentenceId: 'ap-1-1',
+            originalScript: 'ॐ नमः परमात्मने वासुदेवाय। यतो वा इमानि भूतानि जायन्ते येन जातानि जीवन्ति यत्प्रयन्त्यभिसंविशन्ति॥',
+            hindiTranslation: 'उस सच्चिदानन्दघन परमात्मा वासुदेव को बारंबार नमस्कार है, जिससे यह सम्पूर्ण दृश्य जगत उत्पन्न होता है, जिसके आश्रय से जीवित रहता है और प्रलयकाल में जिसमें विलीन हो जाता है।',
+            englishTranslation: 'Om, salutations unto the Supreme Soul Lord Vasudeva, from Whom all beings are manifested, by Whose grace they live, and into Whom they dissolve.',
+            transliteration: 'Oṃ namaḥ paramātmane vāsudevāya | yato vā imāni bhūtāni jāyante...',
+            startTime: 0.0,
+            endTime: 9.5
+          },
+          {
+            sentenceId: 'ap-1-2',
+            originalScript: 'ऋषयः ऊचुः - सूत जानासि सर्वाणि पुराणादीनि तत्वतः। वद नः पावनं ज्ञानं यज्ज्ञात्वा मुच्यते नरः॥',
+            hindiTranslation: 'शौनक आदि महर्षियों ने कहा—हे परम ज्ञानी सूतजी! आप समस्त इतिहास, वेद और पुराणों के गूढ़ रहस्य को यथार्थ रूप से जानते हैं। कृपा कर हमें वह पवित्रतम ज्ञान प्रदान करें।',
+            englishTranslation: 'The venerable Sages said: O wise Suta! You are the master of all sacred Puranas and epics. Narrate unto us that transcendent wisdom by which mortals cross the ocean of samsara.',
+            transliteration: 'Ṛṣayaḥ ūcuḥ - sūta jānāsi sarvāṇi purāṇādīni tattvataḥ...',
+            startTime: 9.6,
+            endTime: 20.8
           }
         ]
       }
@@ -423,13 +493,13 @@ export const SEED_BOOKS: SeedBook[] = [
 
 export const DAILY_VERSE = {
   religion: 'Hinduism',
-  bookTitle: 'Agni Puran (अग्नि पुराण)',
-  bookSlug: 'agni-puran',
-  chapterNumber: 1,
-  sentenceId: 'ap-1-1',
-  originalScript: 'ॐ नमः परमात्मने वासुदेवाय। यतो वा इमानि भूतानि जायन्ते येन जातानि जीवन्ति यत्प्रयन्त्यभिसंविशन्ति॥',
-  hindiTranslation: 'उस सच्चिदानन्दघन परमात्मा वासुदेव को बारंबार नमस्कार है, जिससे यह सम्पूर्ण दृश्य जगत उत्पन्न होता है, जिसके आश्रय से जीवित रहता है और प्रलयकाल में जिसमें विलीन हो जाता है।',
-  englishTranslation: 'Om, salutations unto the Supreme Divine Lord, from Whom all beings are manifested, sustained, and unto Whom they return.',
-  audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+  bookTitle: 'Shrimad Bhagavad Gita',
+  bookSlug: 'bhagavad-gita',
+  chapterNumber: 2,
+  sentenceId: 'bg-2-1',
+  originalScript: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥',
+  hindiTranslation: 'तेरा केवल कर्म करने में ही अधिकार है, उसके फलों में कभी नहीं। इसलिए तू कर्मफल का हेतु मत बन और न ही तेरी अकर्म में आसक्ति हो।',
+  englishTranslation: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.',
+  audioUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
   date: 'Daily Inspiration'
 };

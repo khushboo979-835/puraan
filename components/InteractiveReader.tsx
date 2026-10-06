@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Bookmark,
   Languages,
-  Type,
   Check,
   Download,
   Sliders,
@@ -24,9 +23,13 @@ import {
   Music,
   SkipForward,
   SkipBack,
-  Volume1
+  Maximize2,
+  Bell,
+  Disc3,
+  Flame,
+  Radio,
+  BookOpen
 } from 'lucide-react';
-import AmbientSoundscape from './AmbientSoundscape';
 import UnlockCheckoutModal from './UnlockCheckoutModal';
 import { useAuth } from '@/context/AuthContext';
 
@@ -82,45 +85,45 @@ export default function InteractiveReader({
 
   // Mode: 'vocal' (Speaks text line by line using SpeechSynthesis) or 'instrumental' (Plays background mp3)
   const [audioMode, setAudioMode] = useState<'vocal' | 'instrumental'>('vocal');
-  const [vocalVoiceContent, setVocalVoiceContent] = useState<'original' | 'hindi' | 'both'>('both');
-  const [voicePersona, setVoicePersona] = useState<'pandit' | 'mataji' | 'auto'>('pandit');
+  const [vocalVoiceContent, setVocalVoiceContent] = useState<'both' | 'original' | 'hindi'>('both');
   const [recitationStage, setRecitationStage] = useState<'shloka' | 'bhavarth' | 'idle'>('idle');
 
   // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(0.88); // Devotional Pandit pacing
+  const [playbackRate, setPlaybackRate] = useState(0.9);
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-
-  // Audio Ref for Instrumental Mode / Background Music
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(60);
+
+  // Faith-Specific Voice & Ambient Drone
+  const [ambientDroneActive, setAmbientDroneActive] = useState(false);
+  const [ambientDroneVolume, setAmbientDroneVolume] = useState(0.2);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Active Highlighted Verse
   const [activeSentenceId, setActiveSentenceId] = useState<string | null>(
     initialBookmark?.sentenceId || (chapter?.verses?.[0]?.sentenceId ?? null)
   );
 
-  // SpeechSynthesis Utterance Reference & Timers
+  // SpeechSynthesis & Audio Refs
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const isPlayingRef = useRef(false);
   const nextVerseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stageTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Reader Settings & Themes
-  const [readingTheme, setReadingTheme] = useState<'gold' | 'parchment' | 'dark' | 'sepia'>('gold');
-  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
+  // Settings & Display options
   const [showHindi, setShowHindi] = useState(true);
   const [showEnglish, setShowEnglish] = useState(true);
+  const [showTransliteration, setShowTransliteration] = useState(true);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
-
-  // Modals & UI Controls
-  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
-  const [bookmarkSavedToast, setBookmarkSavedToast] = useState(false);
+  const [splitViewMode, setSplitViewMode] = useState(true);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [bookmarkSavedToast, setBookmarkSavedToast] = useState(false);
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   // Verse DOM references for smooth auto-scrolling
   const verseElementsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -153,7 +156,7 @@ export default function InteractiveReader({
     }
   };
 
-  // Initialize SpeechSynthesis and voice list with unmount cleanup
+  // Initialize SpeechSynthesis and voice list with cleanup
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
@@ -161,9 +164,7 @@ export default function InteractiveReader({
       const updateVoices = () => {
         if (synthRef.current) {
           const v = synthRef.current.getVoices();
-          if (v && v.length > 0) {
-            setAvailableVoices(v);
-          }
+          if (v && v.length > 0) setAvailableVoices(v);
         }
       };
 
@@ -173,92 +174,81 @@ export default function InteractiveReader({
       }
     }
 
-    const handleBeforeUnload = () => {
-      stopAllAudioAndRecitation();
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       stopAllAudioAndRecitation();
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+      }
     };
   }, []);
 
-  // Sync ref with state
+  // Ambient Drone Audio Controller (Tanpura / 432Hz Binaural Drone)
+  useEffect(() => {
+    if (!ambientAudioRef.current && typeof window !== 'undefined') {
+      const droneAudio = new Audio('https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3');
+      droneAudio.loop = true;
+      ambientAudioRef.current = droneAudio;
+    }
+
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.volume = ambientDroneVolume;
+      if (ambientDroneActive) {
+        ambientAudioRef.current.play().catch(() => {});
+      } else {
+        ambientAudioRef.current.pause();
+      }
+    }
+  }, [ambientDroneActive, ambientDroneVolume]);
+
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
 
-  // Find best speech synthesis voice (prioritizing authentic Indian Hindi Pandit voices)
-  const getPreferredVoice = (persona: 'pandit' | 'mataji' | 'auto') => {
+  // Select Voice matching the specific Faith Tradition
+  const getFaithSpecificVoice = () => {
     if (!synthRef.current) return null;
     const voices = synthRef.current.getVoices().length > 0 ? synthRef.current.getVoices() : availableVoices;
     if (!voices || voices.length === 0) return null;
 
-    const hindiVoices = voices.filter(
-      (v) =>
-        v.lang.toLowerCase().startsWith('hi') ||
-        v.lang.toLowerCase().replace('_', '-').startsWith('hi-')
-    );
-    const indianVoices = voices.filter(
-      (v) =>
-        v.lang.toLowerCase().includes('in') ||
-        v.name.toLowerCase().includes('india') ||
-        v.name.toLowerCase().includes('hindi')
-    );
+    const rel = (book?.religion || '').toLowerCase();
 
-    if (persona === 'pandit') {
-      // Prefer Indian Male Hindi voices: Madhur, Hemant, Tarun, Ravi, Google Hindi
-      const maleHindi =
-        hindiVoices.find((v) => /madhur|hemant|tarun|ravi|male|man/i.test(v.name)) ||
-        hindiVoices.find((v) => !/kalpana|swara|female|woman|zira|geeta/i.test(v.name)) ||
-        hindiVoices[0] ||
-        indianVoices.find((v) => /madhur|hemant|ravi|male/i.test(v.name)) ||
-        indianVoices[0];
-      if (maleHindi) return maleHindi;
-    } else if (persona === 'mataji') {
-      // Prefer Indian Female Hindi voices: Kalpana, Swara, Heera, Google Hindi
-      const femaleHindi =
-        hindiVoices.find((v) => /kalpana|swara|heera|female|woman|shruti/i.test(v.name)) ||
-        hindiVoices[0] ||
-        indianVoices.find((v) => /kalpana|swara|female|woman/i.test(v.name)) ||
-        indianVoices[0];
-      if (femaleHindi) return femaleHindi;
+    if (rel === 'islam') {
+      // Prefer Urdu / Arabic / Melodic Hindi
+      const urdu = voices.find((v) => v.lang.startsWith('ur') || v.lang.startsWith('ar'));
+      if (urdu) return urdu;
     }
 
-    // Auto default: Highest quality Hindi voice
-    return (
-      hindiVoices.find((v) => /madhur|google|kalpana|hemant/i.test(v.name)) ||
-      hindiVoices[0] ||
-      indianVoices[0] ||
-      voices[0]
+    if (rel === 'christianity') {
+      // Prefer British / Indian Classical English or Hindi
+      const eng = voices.find((v) => v.lang.startsWith('en-GB') || v.lang.startsWith('en-IN') || v.lang.startsWith('en'));
+      if (eng) return eng;
+    }
+
+    if (rel === 'sikhism') {
+      // Prefer Punjabi / Gurmukhi / Hindi
+      const pa = voices.find((v) => v.lang.startsWith('pa') || v.lang.startsWith('hi'));
+      if (pa) return pa;
+    }
+
+    // Default Hindi / Sanskrit resonant voices
+    const hindiVoices = voices.filter(
+      (v) => v.lang.toLowerCase().startsWith('hi') || v.lang.toLowerCase().replace('_', '-').startsWith('hi-')
     );
+    const maleHindi =
+      hindiVoices.find((v) => /madhur|hemant|tarun|ravi|male/i.test(v.name)) ||
+      hindiVoices[0] ||
+      voices[0];
+
+    return maleHindi;
   };
 
-  // Format Sanskrit/Script text for rhythmic Pandit-style chanting with sacred breath pauses
-  const formatChantingShloka = (text: string) => {
-    if (!text) return '';
-    return text
-      .replace(/\n+/g, ' । ')
-      .replace(/॥/g, ' ॥ , ')
-      .replace(/।/g, ' । , ')
-      .trim();
-  };
-
-  // Format Hindi Meaning with clear teacher-like explanatory phrasing
-  const formatHindiExplanation = (text: string) => {
-    if (!text) return '';
-    return `॥ भावार्थ ॥ ${text.trim()}`;
-  };
-
-  // Speak a specific verse sequentially (Stage 1: Shloka Chanting -> Stage 2: Hindi Meaning Explanation)
+  // Speak a specific verse sequentially
   const speakVerse = (index: number) => {
     if (!synthRef.current || index < 0 || index >= verses.length) {
       stopAllAudioAndRecitation();
       return;
     }
 
-    // Clear previous timers and current speech
     if (nextVerseTimerRef.current) clearTimeout(nextVerseTimerRef.current);
     if (stageTimerRef.current) clearTimeout(stageTimerRef.current);
     synthRef.current.cancel();
@@ -277,24 +267,23 @@ export default function InteractiveReader({
       });
     }
 
-    const voice = getPreferredVoice(voicePersona);
+    const voice = getFaithSpecificVoice();
 
-    // Stage 2: Speak Hindi Meaning (भावार्थ व्याख्या)
+    // Stage 2: Speak Meaning Explanation (भावार्थ)
     const speakBhavarthStage = () => {
       if (!isPlayingRef.current || !synthRef.current) return;
       setRecitationStage('bhavarth');
 
-      const bhavarthText = formatHindiExplanation(targetVerse.hindiTranslation || '');
-      if (!bhavarthText || !targetVerse.hindiTranslation) {
-        // No Hindi translation, advance to next
+      const bhavarthText = `॥ भावार्थ ॥ ${targetVerse.hindiTranslation || targetVerse.englishTranslation || ''}`;
+      if (!targetVerse.hindiTranslation && !targetVerse.englishTranslation) {
         advanceToNextVerse(index);
         return;
       }
 
       const bhavarthUtterance = new SpeechSynthesisUtterance(bhavarthText);
       bhavarthUtterance.lang = 'hi-IN';
-      bhavarthUtterance.rate = playbackRate * 0.94; // Clear, easy to understand conversational pace
-      bhavarthUtterance.pitch = voicePersona === 'pandit' ? 0.98 : 1.0;
+      bhavarthUtterance.rate = playbackRate * 0.95;
+      bhavarthUtterance.pitch = 0.98;
       bhavarthUtterance.volume = isMuted ? 0 : volume;
       if (voice) bhavarthUtterance.voice = voice;
 
@@ -304,10 +293,7 @@ export default function InteractiveReader({
       };
 
       bhavarthUtterance.onerror = (e: any) => {
-        // If user stopped/cancelled, do nothing!
-        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') {
-          return;
-        }
+        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') return;
         advanceToNextVerse(index);
       };
 
@@ -321,29 +307,27 @@ export default function InteractiveReader({
         nextVerseTimerRef.current = setTimeout(() => {
           if (!isPlayingRef.current) return;
           speakVerse(curIdx + 1);
-        }, 750); // Respectful pause between verses
+        }, 750);
       } else {
         stopAllAudioAndRecitation();
       }
     };
 
-    // Stage 1: Speak Shloka / Holy Original Text (श्लोक पाठ)
+    // Stage 1: Speak Sacred Script
     const speakShlokaStage = () => {
       setRecitationStage('shloka');
-      const shlokaText = formatChantingShloka(targetVerse.originalScript);
+      const shlokaText = targetVerse.originalScript.replace(/\n+/g, ' । ').trim();
 
       const shlokaUtterance = new SpeechSynthesisUtterance(shlokaText);
       shlokaUtterance.lang = 'hi-IN';
-      // Deep resonant devotional Pandit cadence
-      shlokaUtterance.rate = playbackRate * 0.86;
-      shlokaUtterance.pitch = voicePersona === 'pandit' ? 0.90 : 0.98;
+      shlokaUtterance.rate = playbackRate * 0.88;
+      shlokaUtterance.pitch = 0.92;
       shlokaUtterance.volume = isMuted ? 0 : volume;
       if (voice) shlokaUtterance.voice = voice;
 
       shlokaUtterance.onend = () => {
         if (!isPlayingRef.current) return;
         if (vocalVoiceContent === 'both') {
-          // Pause 450ms before explaining meaning
           stageTimerRef.current = setTimeout(() => {
             if (!isPlayingRef.current) return;
             speakBhavarthStage();
@@ -354,10 +338,7 @@ export default function InteractiveReader({
       };
 
       shlokaUtterance.onerror = (e: any) => {
-        // If user stopped/cancelled, do nothing!
-        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') {
-          return;
-        }
+        if (!isPlayingRef.current || e.error === 'canceled' || e.error === 'interrupted') return;
         if (vocalVoiceContent === 'both') {
           speakBhavarthStage();
         } else {
@@ -368,7 +349,6 @@ export default function InteractiveReader({
       synthRef.current?.speak(shlokaUtterance);
     };
 
-    // Dispatch based on user choice
     if (vocalVoiceContent === 'hindi') {
       speakBhavarthStage();
     } else {
@@ -388,20 +368,16 @@ export default function InteractiveReader({
         isPlayingRef.current = true;
         speakVerse(currentVerseIndex);
       } else {
-        // Instrumental Mode
-        if (!audioRef.current) return;
-        audioRef.current
-          .play()
-          .then(() => setIsPlaying(true))
-          .catch((e) => console.warn('Audio play error:', e));
+        if (audioRef.current) {
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
       }
     }
   };
 
-  // When user clicks ANY verse, immediately speak/jump to that verse, or pause if already playing!
+  // Click any verse to instantly jump and listen!
   const handleVerseClick = (verse: VerseItem, index: number) => {
     if (activeSentenceId === verse.sentenceId && isPlaying) {
-      // Tapping the currently playing verse card pauses it!
       stopAllAudioAndRecitation();
       return;
     }
@@ -423,38 +399,22 @@ export default function InteractiveReader({
 
   const handleNextVerse = () => {
     if (currentVerseIndex + 1 < verses.length) {
-      if (audioMode === 'vocal') {
-        speakVerse(currentVerseIndex + 1);
-      } else {
-        const next = verses[currentVerseIndex + 1];
-        handleVerseClick(next, currentVerseIndex + 1);
-      }
+      handleVerseClick(verses[currentVerseIndex + 1], currentVerseIndex + 1);
     }
   };
 
   const handlePrevVerse = () => {
     if (currentVerseIndex - 1 >= 0) {
-      if (audioMode === 'vocal') {
-        speakVerse(currentVerseIndex - 1);
-      } else {
-        const prev = verses[currentVerseIndex - 1];
-        handleVerseClick(prev, currentVerseIndex - 1);
-      }
+      handleVerseClick(verses[currentVerseIndex - 1], currentVerseIndex - 1);
     }
   };
 
-  // Change Vocal Playback Speed
   const handleSpeedChange = (speed: number) => {
     setPlaybackRate(speed);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = speed;
-    }
-    if (isPlaying && audioMode === 'vocal') {
-      speakVerse(currentVerseIndex);
-    }
+    if (audioRef.current) audioRef.current.playbackRate = speed;
+    if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
   };
 
-  // Time update for Instrumental audio mode
   const handleTimeUpdate = () => {
     if (audioMode === 'instrumental' && audioRef.current) {
       const cur = audioRef.current.currentTime;
@@ -476,7 +436,6 @@ export default function InteractiveReader({
     }
   };
 
-  // Auto-Save Reading Bookmark locally and sync silently
   const saveBookmark = (sentenceId?: string, timestamp?: number) => {
     const sId = sentenceId || activeSentenceId || 'start';
     const ts = timestamp !== undefined ? timestamp : currentTime;
@@ -493,9 +452,10 @@ export default function InteractiveReader({
             updatedAt: new Date().toISOString(),
           })
         );
+        setBookmarkSavedToast(true);
+        setTimeout(() => setBookmarkSavedToast(false), 2000);
       }
 
-      // Silent non-blocking sync with catch
       fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -509,91 +469,53 @@ export default function InteractiveReader({
     } catch (e) {}
   };
 
-  // Typography font size mapping
-  const fontClassMap = {
-    sm: { script: 'text-xl leading-relaxed', trans: 'text-xs leading-normal' },
-    md: { script: 'text-2xl sm:text-3xl leading-relaxed sm:leading-loose', trans: 'text-sm sm:text-base leading-relaxed' },
-    lg: { script: 'text-3xl sm:text-4xl leading-relaxed sm:leading-loose', trans: 'text-base sm:text-lg leading-relaxed' },
-    xl: { script: 'text-4xl sm:text-5xl leading-relaxed sm:leading-loose', trans: 'text-lg sm:text-xl leading-relaxed' },
-  };
-
-  // Theme Styling
-  const themeClasses = {
-    gold: 'bg-[#ea8913] text-[#000000]',
-    parchment: 'bg-[#fffcf4] text-[#1a1a1a]',
-    sepia: 'bg-[#faebd1] text-[#2b1802]',
-    dark: 'bg-[#0f1118] text-[#f1e9dc]',
-  };
-
-  const verseBoxTheme = {
-    gold: {
-      normal: 'bg-[#ffdca3] hover:bg-[#ffe5b8] border-2 border-[#522700] text-[#000000] shadow-sm',
-      active: 'bg-[#fff5dc] border-3 border-[#000000] ring-4 ring-[#ffeaae] shadow-2xl scale-[1.01]',
-      textScript: 'text-[#000000] font-black',
-      textHindi: 'text-[#1f0f00] font-bold',
-      textEng: 'text-[#381b00] font-semibold',
-    },
-    parchment: {
-      normal: 'bg-white hover:bg-[#fffdf8] border-2 border-[#e5cd91] text-[#1a1a1a] shadow-xs',
-      active: 'bg-[#fff9eb] border-2 border-[#c59b27] ring-4 ring-[#f5e7c8] shadow-xl',
-      textScript: 'text-[#1a1a1a] font-bold',
-      textHindi: 'text-[#333333]',
-      textEng: 'text-[#555555]',
-    },
-    sepia: {
-      normal: 'bg-[#f4e0bc] border-2 border-[#784805] text-[#2b1802]',
-      active: 'bg-[#fff1d6] border-2 border-[#2b1802] ring-3 ring-[#e5c188] shadow-xl',
-      textScript: 'text-[#1f0f00] font-bold',
-      textHindi: 'text-[#2b1802]',
-      textEng: 'text-[#472905]',
-    },
-    dark: {
-      normal: 'bg-[#151822]/80 border border-stone-800 text-stone-200',
-      active: 'bg-[#222838] border-2 border-[#e69a28] ring-3 ring-amber-500/30 text-white shadow-2xl',
-      textScript: 'text-amber-200 font-bold',
-      textHindi: 'text-stone-300',
-      textEng: 'text-stone-400',
-    },
-  };
-
-  const currentTheme = verseBoxTheme[readingTheme];
-
+  // Locked State for Monetization
   if (locked) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-[#ea8913]">
-        <div className="max-w-md w-full bg-[#ffdca3] border-3 border-[#522700] rounded-3xl p-8 text-center shadow-2xl space-y-6 text-[#000000]">
-          <div className="w-16 h-16 bg-[#1f0f00] border-2 border-[#522700] rounded-full flex items-center justify-center mx-auto text-[#ffd99e]">
+      <div className="min-h-screen bg-[#0A0908] text-[#FEF3C7] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bento-card rounded-3xl p-8 text-center border-2 border-[#F59E0B]/50 shadow-[0_25px_60px_rgba(0,0,0,0.95)] space-y-6">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#D97706] to-[#FEF3C7] flex items-center justify-center mx-auto text-[#0A0908] shadow-lg">
             <Lock className="w-8 h-8" />
           </div>
+
           <div>
-            <span className="text-xs uppercase tracking-widest text-[#000000] font-black">Premium Scripture</span>
-            <h2 className="text-2xl font-heading font-black text-[#000000] mt-1">Chapter {chapterNumber} is Locked</h2>
-            <p className="text-xs text-[#2b1400] font-bold mt-2">
-              Chapter 1 of {book.title} is 100% free to read and listen. Chapters 2 onwards require full digital access.
+            <span className="text-[11px] uppercase tracking-widest text-amber-400 font-bold bg-[#1C1610] px-3 py-1 rounded-full border border-[#F59E0B]/30">
+              Premium Chapter {chapterNumber}
+            </span>
+            <h2 className="text-2xl font-heading font-bold text-[#FFFBEB] mt-3">
+              Unlock Complete Sacred Granth
+            </h2>
+            <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+              Chapter 1 is 100% free to read and listen. Unlock complete Adhyays, audio synchronization, and DRM watermarked offline study for <strong>{book.title}</strong>.
             </p>
           </div>
 
-          <div className="p-4 bg-[#fff4d6] rounded-2xl border-2 border-[#522700] text-left space-y-2 text-xs">
+          <div className="p-4 rounded-2xl bg-[#15110D] border border-stone-800 text-left space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="font-bold text-[#2b1400]">Access Type:</span>
-              <span className="font-black text-emerald-900">Permanent Lifetime DRM License</span>
+              <span className="text-stone-400">Total Chapters:</span>
+              <span className="font-bold text-stone-100">{book.totalChapters} Adhyays</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-bold text-[#2b1400]">Unlock Price:</span>
-              <span className="font-black text-[#000000] text-sm">₹{book.price}</span>
+              <span className="text-stone-400">Access:</span>
+              <span className="font-bold text-emerald-400">Lifetime Digital License</span>
+            </div>
+            <div className="flex justify-between border-t border-stone-800 pt-2 text-sm">
+              <span className="font-bold text-stone-200">Price:</span>
+              <span className="font-black text-[#FEF3C7]">₹{book.price || 49}</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <button
               onClick={() => setUnlockModalOpen(true)}
-              className="w-full py-3.5 px-6 bg-[#1f0f00] hover:bg-[#381b00] text-[#ffd99e] font-black rounded-2xl shadow-xl transition border-2 border-[#522700]"
+              className="btn-gold-glow w-full py-3.5 px-6 font-bold rounded-2xl text-xs text-[#0A0908] shadow-xl hover:scale-105 transition"
             >
-              Unlock All Chapters for ₹{book.price}
+              Unlock Complete Granth (₹{book.price || 49}) ↗
             </button>
+
             <Link
               href={`/reader/${slug}/1`}
-              className="block w-full py-2.5 px-4 bg-[#fff4d6] hover:bg-[#ffebbf] text-[#000000] text-xs font-black rounded-xl border-2 border-[#522700] transition"
+              className="block w-full py-2.5 px-4 rounded-xl bg-[#1C1610] text-amber-200 hover:text-white text-xs font-bold border border-stone-800 transition text-center"
             >
               ← Read Free Chapter 1 Instead
             </Link>
@@ -614,7 +536,7 @@ export default function InteractiveReader({
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 pb-36 ${themeClasses[readingTheme]}`}>
+    <div className="min-h-screen bg-[#0A0908] text-[#FEF3C7] pb-36 relative overflow-x-hidden">
       {/* Hidden Audio Element for Instrumental Mode */}
       <audio
         ref={audioRef}
@@ -627,201 +549,162 @@ export default function InteractiveReader({
         preload="auto"
       />
 
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-[#ea8913]/95 border-b-2 border-[#522700] px-4 sm:px-8 py-3 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      {/* ── TOP STICKY READER STUDIO HEADER ──────────────────────── */}
+      <header className="sticky top-0 z-30 bg-[#0E0B08]/95 backdrop-blur-xl border-b border-[#F59E0B]/20 px-4 sm:px-8 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          
           <div className="flex items-center space-x-3 min-w-0">
             <Link
               href={`/book/${slug}`}
-              className="p-2 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] border-2 border-[#522700] transition font-bold"
+              className="p-2 rounded-xl bg-[#18130E] hover:bg-[#2A1F13] text-[#FEF3C7] border border-[#F59E0B]/30 transition"
               title="Return to Book Overview"
             >
-              <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+              <ChevronLeft className="w-5 h-5" />
             </Link>
+
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#1f0f00] text-[#ffd99e] border border-[#522700]">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#1C1610] text-[#FEF3C7] border border-[#F59E0B]/40">
                   {book.religion}
                 </span>
-                <span className="text-xs text-[#241000] font-bold truncate hidden sm:inline">{book.title}</span>
+                <span className="text-xs text-stone-400 font-medium truncate hidden sm:inline">{book.title}</span>
               </div>
-              <h1 className="text-sm sm:text-base font-heading font-black text-[#000000] truncate mt-0.5">
+              <h1 className="text-sm sm:text-base font-heading font-bold text-[#FFFBEB] truncate mt-0.5">
                 {chapter.title}
               </h1>
             </div>
           </div>
 
-          {/* Reader Action Controls */}
+          {/* Controls Right */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Ambient Soundscape Controller (Temple Bells / Flute / Rain) */}
-            <AmbientSoundscape initialSound="none" initialVolume={0.25} />
+            {/* Ambient Drone Button (Tanpura/Binaural 432Hz) */}
+            <button
+              onClick={() => setAmbientDroneActive(!ambientDroneActive)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                ambientDroneActive
+                  ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-[#0A0908] shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                  : 'bg-[#18130E] text-stone-300 hover:text-white border border-[#F59E0B]/30'
+              }`}
+              title="Toggle Ambient 432Hz Tanpura / Drone"
+            >
+              <Disc3 className={`w-3.5 h-3.5 ${ambientDroneActive ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">432Hz Drone</span>
+            </button>
+
+            {/* Split View Toggle */}
+            <button
+              onClick={() => setSplitViewMode(!splitViewMode)}
+              className={`p-2 rounded-xl text-xs font-bold transition ${
+                splitViewMode
+                  ? 'bg-[#2A1F13] text-amber-300 border border-[#F59E0B]/50'
+                  : 'bg-[#18130E] text-stone-400 border border-stone-800'
+              }`}
+              title="Toggle Split-Screen / Focused Sanctuary View"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
 
             {/* Bookmark button */}
             <button
               onClick={() => saveBookmark()}
-              className="p-2 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] border-2 border-[#522700] transition font-bold"
-              title="Save Bookmark"
+              className="p-2 rounded-xl bg-[#18130E] hover:bg-[#2A1F13] text-[#FEF3C7] border border-[#F59E0B]/30 transition"
+              title="Save Reading Progress"
             >
-              <Bookmark className="w-4 h-4 stroke-[2.5]" />
+              <Bookmark className="w-4 h-4" />
             </button>
 
-            {/* Settings trigger */}
+            {/* Settings Trigger */}
             <button
               onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-xs font-black text-[#000000] border-2 border-[#522700] transition"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-[#18130E] hover:bg-[#2A1F13] text-xs font-bold text-[#FEF3C7] border border-[#F59E0B]/30 transition"
             >
-              <Sliders className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden sm:inline">Settings</span>
+              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Options</span>
             </button>
           </div>
+
         </div>
 
-        {/* Settings Drawer */}
+        {/* Options Drawer */}
         {showSettingsDrawer && (
-          <div className="max-w-5xl mx-auto mt-3 p-4 bg-[#ffdca3] border-3 border-[#522700] rounded-2xl shadow-2xl text-[#000000] animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              {/* Voice Reciter Persona & Content */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-1.5">
-                    🛕 वाचक स्वर (Pandit / Voice Style)
-                  </label>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      onClick={() => {
-                        setVoicePersona('pandit');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        voicePersona === 'pandit'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      पंडित जी (पुरुष)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVoicePersona('mataji');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        voicePersona === 'mataji'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      विदुषी (स्त्री)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVoicePersona('auto');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        voicePersona === 'auto'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      सिस्टम हिंदी
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-1.5">
-                    📖 पाठ सामग्री (Reciter Content)
-                  </label>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      onClick={() => {
-                        setVocalVoiceContent('both');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        vocalVoiceContent === 'both'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      दोनों (श्लोक+अर्थ)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVocalVoiceContent('original');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        vocalVoiceContent === 'original'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      केवल श्लोक
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVocalVoiceContent('hindi');
-                        if (isPlaying && audioMode === 'vocal') speakVerse(currentVerseIndex);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg border-2 text-center font-black text-[11px] ${
-                        vocalVoiceContent === 'hindi'
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-sm'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
-                      }`}
-                    >
-                      केवल भावार्थ
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Font Size Adjuster */}
+          <div className="max-w-6xl mx-auto mt-3 p-4 bento-card rounded-2xl border border-[#F59E0B]/40 text-stone-200 text-xs animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Recitation Content */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-2">
-                  Sacred Typography Size
+                <label className="block text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2">
+                  Vocal Content
                 </label>
-                <div className="flex items-center space-x-1.5">
-                  {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: 'both', label: 'Script + Meaning' },
+                    { id: 'original', label: 'Only Script' },
+                    { id: 'hindi', label: 'Only Meaning' },
+                  ].map((opt) => (
                     <button
-                      key={sz}
-                      onClick={() => setFontSize(sz)}
-                      className={`flex-1 py-1.5 rounded-lg border-2 text-center font-black uppercase text-xs ${
-                        fontSize === sz
-                          ? 'bg-[#1f0f00] text-[#ffd99e] border-black'
-                          : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
+                      key={opt.id}
+                      onClick={() => {
+                        setVocalVoiceContent(opt.id as any);
+                        if (isPlaying) speakVerse(currentVerseIndex);
+                      }}
+                      className={`py-1.5 px-1 rounded-lg text-center font-bold text-[10px] transition ${
+                        vocalVoiceContent === opt.id
+                          ? 'bg-[#F59E0B] text-[#0A0908]'
+                          : 'bg-[#18130E] text-stone-300 border border-stone-800'
                       }`}
                     >
-                      {sz}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Theme & Auto Center */}
+              {/* Display Options */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-[#000000] mb-2">
+                <label className="block text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2">
                   Display Options
                 </label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowHindi(!showHindi)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg border-2 text-center font-black text-[11px] ${
-                      showHindi ? 'bg-[#1f0f00] text-[#ffd99e] border-black' : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
+                    className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition ${
+                      showHindi ? 'bg-[#2A1F13] text-amber-300 border border-[#F59E0B]/50' : 'bg-[#18130E] text-stone-400 border border-stone-800'
                     }`}
                   >
                     Hindi {showHindi ? '✓' : 'Off'}
                   </button>
                   <button
+                    onClick={() => setShowTransliteration(!showTransliteration)}
+                    className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition ${
+                      showTransliteration ? 'bg-[#2A1F13] text-amber-300 border border-[#F59E0B]/50' : 'bg-[#18130E] text-stone-400 border border-stone-800'
+                    }`}
+                  >
+                    Roman Script {showTransliteration ? '✓' : 'Off'}
+                  </button>
+                  <button
                     onClick={() => setAutoScrollEnabled(!autoScrollEnabled)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg border-2 text-center font-black text-[11px] ${
-                      autoScrollEnabled ? 'bg-[#105c24] text-white border-black' : 'bg-[#fff4d6] border-[#522700] text-[#000000]'
+                    className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition ${
+                      autoScrollEnabled ? 'bg-[#1B3520] text-emerald-300 border border-emerald-500/50' : 'bg-[#18130E] text-stone-400 border border-stone-800'
                     }`}
                   >
                     Auto-Center {autoScrollEnabled ? '✓' : 'Off'}
                   </button>
                 </div>
+              </div>
+
+              {/* Ambient Volume Slider */}
+              <div>
+                <label className="block text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2">
+                  432Hz Drone Volume
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={ambientDroneVolume}
+                  onChange={(e) => setAmbientDroneVolume(parseFloat(e.target.value))}
+                  className="w-full accent-amber-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer"
+                />
               </div>
             </div>
           </div>
@@ -830,150 +713,35 @@ export default function InteractiveReader({
 
       {/* Bookmark Toast */}
       {bookmarkSavedToast && (
-        <div className="fixed top-20 right-6 z-50 bg-[#1f0f00] text-[#ffd99e] font-black px-4 py-2 rounded-xl shadow-2xl flex items-center space-x-2 text-xs border-2 border-[#522700] animate-in slide-in-from-top-2 duration-150">
-          <Check className="w-4 h-4 stroke-[3]" />
-          <span>Reading progress synchronized to shelf!</span>
+        <div className="fixed top-20 right-6 z-50 bg-[#1F1710] text-[#FEF3C7] font-bold px-4 py-2 rounded-xl shadow-2xl flex items-center space-x-2 text-xs border border-[#F59E0B]/60 animate-in slide-in-from-top-2">
+          <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+          <span>Reading progress synchronized to My Shelf!</span>
         </div>
       )}
 
-      {/* Main Scripture Verses Reader Stream */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-12">
+      {/* ── MAIN SCRIPTURE VERSES STREAM (Karaoke Synchronized) ───── */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-12">
         {/* Chapter Header Banner */}
-        <div className="text-center mb-10 pb-8 border-b-2 border-[#522700]">
-          <span className="text-[#000000] text-3xl font-serif font-black">ॐ</span>
-          <h2 className="text-2xl sm:text-3xl font-heading font-black tracking-tight mt-2 text-[#000000]">
+        <div className="text-center mb-8 pb-6 border-b border-[#F59E0B]/20">
+          <span className="text-[#F59E0B] text-3xl font-serif">ॐ</span>
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight mt-1 text-[#FFFBEB]">
             {chapter.title}
           </h2>
           {chapter.summary && (
-            <p className="mt-3 text-xs sm:text-sm text-[#2b1400] font-bold max-w-2xl mx-auto italic font-serif leading-relaxed">
-              "{chapter.summary}"
+            <p className="mt-2 text-xs sm:text-sm text-stone-300 font-serif italic max-w-2xl mx-auto leading-relaxed">
+              &ldquo;{chapter.summary}&rdquo;
             </p>
           )}
 
-          {/* Mode Switcher Pill */}
-          <div className="inline-flex items-center gap-2 mt-5 p-1.5 bg-[#ffdca3] border-2 border-[#522700] rounded-full shadow-sm">
-            <button
-              onClick={() => {
-                if (isPlaying) {
-                  stopAllAudioAndRecitation();
-                }
-                setAudioMode('vocal');
-              }}
-              className={`flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-black transition ${
-                audioMode === 'vocal'
-                  ? 'bg-[#1f0f00] text-[#ffd99e] shadow-sm'
-                  : 'text-[#000000] hover:bg-[#ffebc2]'
-              }`}
-            >
-              <Mic className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>🛕 पंडित जी वाणी पाठ (Pandit Recitation)</span>
-            </button>
-            <button
-              onClick={() => {
-                if (isPlaying) {
-                  stopAllAudioAndRecitation();
-                }
-                setAudioMode('instrumental');
-              }}
-              className={`flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-black transition ${
-                audioMode === 'instrumental'
-                  ? 'bg-[#1f0f00] text-[#ffd99e] shadow-sm'
-                  : 'text-[#000000] hover:bg-[#ffebc2]'
-              }`}
-            >
-              <Music className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>🎵 Sacred Instrumental (संगीत)</span>
-            </button>
-          </div>
-
-          {/* Vocal Mode Sub-Options (Shloka + Meaning + Voice Persona) */}
-          {audioMode === 'vocal' && (
-            <div className="mt-4 space-y-2">
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="text-xs font-black text-[#000000]">वाचन सामग्री:</span>
-                <button
-                  onClick={() => {
-                    setVocalVoiceContent('both');
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
-                    vocalVoiceContent === 'both'
-                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
-                      : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
-                  }`}
-                >
-                  ✨ श्लोक + भावार्थ (अर्थ सहित बोलें)
-                </button>
-                <button
-                  onClick={() => {
-                    setVocalVoiceContent('original');
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
-                    vocalVoiceContent === 'original'
-                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
-                      : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
-                  }`}
-                >
-                  📜 केवल श्लोक
-                </button>
-                <button
-                  onClick={() => {
-                    setVocalVoiceContent('hindi');
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-black border-2 transition ${
-                    vocalVoiceContent === 'hindi'
-                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-md'
-                      : 'bg-[#ffdca3] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
-                  }`}
-                >
-                  💡 केवल हिंदी भावार्थ (अर्थ)
-                </button>
-              </div>
-
-              {/* Voice Persona Switcher */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <span className="text-xs font-black text-[#000000]">वाचक स्वर:</span>
-                <button
-                  onClick={() => {
-                    setVoicePersona('pandit');
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className={`px-2.5 py-0.5 rounded-md text-[11px] font-black border transition ${
-                    voicePersona === 'pandit'
-                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-xs'
-                      : 'bg-[#fff4d6] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
-                  }`}
-                >
-                  🛕 पंडित जी (पुरुष)
-                </button>
-                <button
-                  onClick={() => {
-                    setVoicePersona('mataji');
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className={`px-2.5 py-0.5 rounded-md text-[11px] font-black border transition ${
-                    voicePersona === 'mataji'
-                      ? 'bg-[#1f0f00] text-[#ffd99e] border-black shadow-xs'
-                      : 'bg-[#fff4d6] text-[#000000] border-[#522700] hover:bg-[#ffe5b8]'
-                  }`}
-                >
-                  🌸 विदुषी (स्त्री)
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center space-x-4 mt-3 text-[11px] text-[#241000] font-bold">
+          <div className="flex items-center justify-center space-x-3 mt-3 text-xs text-stone-400">
             <span>{verses.length} Synced Verses</span>
             <span>•</span>
-            <span className="text-[#000000] underline font-black">Click any verse to instantly hear it spoken!</span>
+            <span className="text-amber-300 font-semibold">Click any verse to instantly seek & listen</span>
           </div>
         </div>
 
-        {/* Verses List */}
-        <div className="space-y-6">
+        {/* Verses Karaoke Stream */}
+        <div className="space-y-5">
           {verses.map((verse, index) => {
             const isActive = activeSentenceId === verse.sentenceId;
             return (
@@ -983,22 +751,22 @@ export default function InteractiveReader({
                   verseElementsRef.current[verse.sentenceId] = el;
                 }}
                 onClick={() => handleVerseClick(verse, index)}
-                className={`group cursor-pointer rounded-2xl p-5 sm:p-7 border-2 transition-all duration-300 relative ${
-                  isActive ? currentTheme.active : currentTheme.normal
+                className={`cursor-pointer rounded-3xl p-5 sm:p-7 border transition-all duration-300 relative ${
+                  isActive
+                    ? 'bg-gradient-to-r from-[#2A1E12] via-[#1B140D] to-[#120E0A] border-l-4 border-l-[#F59E0B] border-[#F59E0B]/80 shadow-[0_0_35px_rgba(245,158,11,0.22)] scale-[1.01]'
+                    : 'bento-card border-[#F59E0B]/20 hover:border-[#F59E0B]/50'
                 }`}
               >
-                {/* Active Pill with Live Recitation Stage */}
+                {/* Active Indicator Tag */}
                 {isActive && (
-                  <div className="absolute -top-3.5 left-6 px-3.5 py-0.5 rounded-full bg-[#000000] text-[#ffdc82] text-[10px] font-black uppercase tracking-widest flex items-center space-x-1.5 shadow-md">
-                    <Sparkles className="w-3 h-3 text-[#ffdc82] animate-spin" />
+                  <div className="absolute -top-3 left-6 px-3 py-0.5 rounded-full bg-[#F59E0B] text-[#0A0908] text-[10px] font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-md">
+                    <Sparkles className="w-3 h-3 animate-spin" />
                     <span>
                       {isPlaying
                         ? recitationStage === 'shloka'
-                          ? '🛕 श्लोक पाठ हो रहा है...'
-                          : recitationStage === 'bhavarth'
-                          ? '💡 भावार्थ समझाया जा रहा है...'
-                          : 'Reciting Now'
-                        : 'Selected Verse'}
+                          ? 'Reciting Script...'
+                          : 'Explaining Meaning...'
+                        : 'Current Verse'}
                     </span>
                   </div>
                 )}
@@ -1007,10 +775,10 @@ export default function InteractiveReader({
                   {/* Verse Number Badge */}
                   <div className="flex-shrink-0">
                     <span
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black ${
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-bold ${
                         isActive
-                          ? 'bg-[#000000] text-[#ffdc82] shadow-md'
-                          : 'bg-[#fff4d6] text-[#000000] border-2 border-[#522700]'
+                          ? 'bg-gradient-to-tr from-[#D97706] to-[#FEF3C7] text-[#0A0908] shadow-md'
+                          : 'bg-[#18130E] text-stone-300 border border-stone-800'
                       }`}
                     >
                       {index + 1}
@@ -1021,37 +789,40 @@ export default function InteractiveReader({
                   <div className="flex-1 space-y-3 min-w-0">
                     {/* Original Script */}
                     <p
-                      className={`font-serif tracking-wide ${fontClassMap[fontSize].script} ${
-                        isActive ? currentTheme.textScript : 'text-[#000000] font-black'
+                      className={`font-serif text-xl sm:text-2xl leading-relaxed sm:leading-loose ${
+                        isActive ? 'text-[#FFFBEB] text-shadow-gold font-semibold' : 'text-stone-100 font-medium'
                       }`}
                     >
                       {verse.originalScript}
                     </p>
 
+                    {/* Transliteration */}
+                    {showTransliteration && verse.transliteration && (
+                      <p className="text-xs sm:text-sm font-sans italic text-amber-200/70 tracking-wide">
+                        {verse.transliteration}
+                      </p>
+                    )}
+
                     {/* Hindi Translation */}
                     {showHindi && verse.hindiTranslation && (
-                      <div className="pt-2 border-t-2 border-[#522700]/30">
-                        <p className={`font-serif ${fontClassMap[fontSize].trans} ${currentTheme.textHindi}`}>
-                          <span className="text-[10px] uppercase font-sans font-black text-[#000000] mr-1.5 underline">
-                            भावार्थ:
-                          </span>
+                      <div className="pt-2 border-t border-stone-800/80">
+                        <p className="font-serif text-xs sm:text-sm text-stone-200 leading-relaxed">
+                          <strong className="text-amber-400 font-sans mr-1">भावार्थ:</strong>
                           {verse.hindiTranslation}
                         </p>
                       </div>
                     )}
 
-                    {/* English Meaning */}
+                    {/* English Translation */}
                     {showEnglish && verse.englishTranslation && (
-                      <p className={`text-xs sm:text-sm font-sans italic ${currentTheme.textEng}`}>
-                        <span className="text-[10px] uppercase font-bold text-[#000000] mr-1.5 not-italic">
-                          Meaning:
-                        </span>
+                      <p className="text-xs sm:text-sm font-sans text-stone-300/85 leading-relaxed">
+                        <strong className="text-stone-400 mr-1">Meaning:</strong>
                         {verse.englishTranslation}
                       </p>
                     )}
                   </div>
 
-                  {/* Play Verse Icon Button */}
+                  {/* Verse Play Button */}
                   <div className="flex-shrink-0">
                     <button
                       onClick={(e) => {
@@ -1062,13 +833,13 @@ export default function InteractiveReader({
                           handleVerseClick(verse, index);
                         }
                       }}
-                      className="p-2 sm:p-2.5 rounded-xl bg-[#1f0f00] text-[#ffd99e] hover:bg-[#381b00] transition shadow-md flex items-center justify-center cursor-pointer"
-                      title={isActive && isPlaying ? "Pause Recitation (विराम)" : "Speak this verse (पाठ शुरू करें)"}
+                      className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-tr from-[#F59E0B] to-[#D97706] text-[#0A0908] hover:scale-105 transition shadow-md flex items-center justify-center cursor-pointer"
+                      title={isActive && isPlaying ? 'Pause Recitation' : 'Play This Verse'}
                     >
                       {isActive && isPlaying ? (
-                        <Pause className="w-5 h-5 fill-[#ffd99e]" />
+                        <Pause className="w-4 h-4 fill-[#0A0908]" />
                       ) : (
-                        <Play className="w-5 h-5 fill-[#ffd99e] ml-0.5" />
+                        <Play className="w-4 h-4 fill-[#0A0908] ml-0.5" />
                       )}
                     </button>
                   </div>
@@ -1078,23 +849,23 @@ export default function InteractiveReader({
           })}
         </div>
 
-        {/* Chapter Navigation */}
-        <div className="mt-12 pt-8 border-t-2 border-[#522700] flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Chapter Navigation Bottom */}
+        <div className="mt-10 pt-6 border-t border-[#F59E0B]/20 flex items-center justify-between">
           <div>
             {chapterNumber > 1 ? (
               <Link
                 href={`/reader/${slug}/${chapterNumber - 1}`}
-                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#ffdca3] hover:bg-[#ffe5b8] text-[#000000] text-xs font-black border-2 border-[#522700] transition"
+                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#18130E] hover:bg-[#2A1F13] text-[#FEF3C7] text-xs font-bold border border-[#F59E0B]/30 transition"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span>Previous Chapter {chapterNumber - 1}</span>
+                <span>Chapter {chapterNumber - 1}</span>
               </Link>
             ) : (
               <div />
             )}
           </div>
 
-          <div className="text-center font-black text-xs text-[#000000]">
+          <div className="text-xs text-stone-400 font-bold">
             Chapter {chapterNumber} of {book.totalChapters}
           </div>
 
@@ -1102,9 +873,9 @@ export default function InteractiveReader({
             {chapterNumber < book.totalChapters && (
               <Link
                 href={`/reader/${slug}/${chapterNumber + 1}`}
-                className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#1f0f00] hover:bg-[#381b00] text-[#ffd99e] text-xs font-black transition shadow-md border-2 border-[#522700]"
+                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl btn-gold-glow text-[#0A0908] text-xs font-bold transition shadow-md"
               >
-                <span>Next Chapter {chapterNumber + 1}</span>
+                <span>Chapter {chapterNumber + 1}</span>
                 <ChevronRight className="w-4 h-4" />
               </Link>
             )}
@@ -1112,113 +883,89 @@ export default function InteractiveReader({
         </div>
       </main>
 
-      {/* Persistent Bottom Voice & Audio Player Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#1f0f00] border-t-3 border-[#522700] px-4 sm:px-8 py-3.5 shadow-2xl text-[#ffd99e]">
-        <div className="max-w-5xl mx-auto space-y-2">
-          {/* Controls Strip */}
-          <div className="flex items-center justify-between gap-2">
-            {/* Left: Current Active Verse Info */}
-            <div className="flex items-center space-x-3 max-w-xs truncate">
-              <div className="w-10 h-10 rounded-xl bg-[#381b00] border border-[#522700] flex items-center justify-center text-[#ffd99e] font-serif font-black text-sm flex-shrink-0">
-                {audioMode === 'vocal' ? (voicePersona === 'pandit' ? '🛕' : '🌸') : '🎵'}
-              </div>
-              <div className="truncate">
-                <p className="text-xs font-heading font-black text-[#ffffff] truncate">{chapter.title}</p>
-                <p className="text-[10px] text-[#ffdc82] font-bold truncate">
-                  {audioMode === 'vocal'
-                    ? isPlaying
-                      ? recitationStage === 'shloka'
-                        ? `🛕 श्लोक पाठ (Verse ${currentVerseIndex + 1})`
-                        : `💡 भावार्थ व्याख्या (Verse ${currentVerseIndex + 1})`
-                      : `वाणी पाठ: Verse ${currentVerseIndex + 1} of ${verses.length}`
-                    : `Instrumental: Verse ${currentVerseIndex + 1}`}
-                </p>
-              </div>
+      {/* ── PERSISTENT BOTTOM VOICE & AUDIO PLAYER BAR ─────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0E0B08]/95 backdrop-blur-2xl border-t border-[#F59E0B]/30 px-4 sm:px-8 py-3.5 shadow-2xl text-[#FEF3C7]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          
+          {/* Left: Active Info */}
+          <div className="flex items-center space-x-3 max-w-xs truncate w-full sm:w-auto">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#D97706] to-[#FEF3C7] flex items-center justify-center text-[#0A0908] font-bold shadow-md flex-shrink-0">
+              <Flame className="w-5 h-5 animate-pulse" />
             </div>
-
-            {/* Center: Play / Pause / Next / Prev Controls */}
-            <div className="flex items-center space-x-3 sm:space-x-4 mx-auto">
-              <button
-                onClick={handlePrevVerse}
-                disabled={currentVerseIndex === 0}
-                className="p-2 text-[#ffd99e] hover:text-white transition disabled:opacity-30"
-                title="Previous Verse"
-              >
-                <SkipBack className="w-5 h-5 fill-current" />
-              </button>
-
-              <button
-                onClick={togglePlay}
-                className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ffd99e] to-[#ffc570] hover:from-white hover:to-[#ffd99e] text-[#1f0f00] font-black flex items-center justify-center shadow-lg hover:scale-105 transition-all"
-                title={isPlaying ? 'Pause Recitation (विराम)' : 'Start Pandit Recitation (पाठ शुरू करें)'}
-              >
-                {isPlaying ? <Pause className="w-6 h-6 fill-[#1f0f00]" /> : <Play className="w-6 h-6 fill-[#1f0f00] ml-0.5" />}
-              </button>
-
-              <button
-                onClick={handleNextVerse}
-                disabled={currentVerseIndex + 1 >= verses.length}
-                className="p-2 text-[#ffd99e] hover:text-white transition disabled:opacity-30"
-                title="Next Verse"
-              >
-                <SkipForward className="w-5 h-5 fill-current" />
-              </button>
-            </div>
-
-            {/* Right: Recite Mode & Speed */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Quick Persona Toggle */}
-              {audioMode === 'vocal' && (
-                <button
-                  onClick={() => {
-                    const nextPersona = voicePersona === 'pandit' ? 'mataji' : 'pandit';
-                    setVoicePersona(nextPersona);
-                    if (isPlaying) speakVerse(currentVerseIndex);
-                  }}
-                  className="px-2 py-1 rounded-lg bg-[#381b00] border border-[#522700] text-[10px] font-black text-[#ffdc82] hover:bg-[#522700] hidden sm:inline"
-                  title="Switch Voice Style"
-                >
-                  {voicePersona === 'pandit' ? '🛕 पंडित जी' : '🌸 विदुषी'}
-                </button>
-              )}
-
-              {/* Speed Multiplier */}
-              <div className="relative group">
-                <button className="px-2.5 py-1.5 rounded-lg bg-[#381b00] border border-[#522700] text-xs font-mono font-black text-[#ffdc82] hover:bg-[#522700]">
-                  {playbackRate}x
-                </button>
-                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:flex flex-col bg-[#1f0f00] border-2 border-[#522700] rounded-xl p-1.5 shadow-xl z-50">
-                  {[0.75, 0.88, 1.0, 1.25, 1.5].map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => handleSpeedChange(rate)}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono transition text-left ${
-                        playbackRate === rate ? 'bg-[#381b00] text-[#ffdc82] font-black' : 'text-[#ffd99e] hover:bg-[#2b1400]'
-                      }`}
-                    >
-                      {rate}x {rate === 0.88 ? '(Pandit Pace)' : ''}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Volume / Mute */}
-              <button
-                onClick={() => {
-                  const newMute = !isMuted;
-                  setIsMuted(newMute);
-                  if (audioRef.current) audioRef.current.muted = newMute;
-                  if (synthRef.current && isPlaying) {
-                    speakVerse(currentVerseIndex);
-                  }
-                }}
-                className="p-2 text-[#ffd99e] hover:text-white"
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5" />}
-              </button>
+            <div className="truncate">
+              <p className="text-xs font-heading font-bold text-[#FFFBEB] truncate">{chapter.title}</p>
+              <p className="text-[10px] text-amber-300 font-semibold truncate">
+                Verse {currentVerseIndex + 1} of {verses.length} • {book.religion}
+              </p>
             </div>
           </div>
+
+          {/* Center: Controls & Equalizer */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handlePrevVerse}
+              disabled={currentVerseIndex === 0}
+              className="p-1.5 text-stone-400 hover:text-white transition disabled:opacity-30"
+              title="Previous Verse"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={togglePlay}
+              className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FEF3C7] via-[#F59E0B] to-[#D97706] flex items-center justify-center text-[#0A0908] shadow-lg hover:scale-105 transition"
+            >
+              {isPlaying ? <Pause className="w-5 h-5 fill-[#0A0908]" /> : <Play className="w-5 h-5 fill-[#0A0908] ml-0.5" />}
+            </button>
+
+            <button
+              onClick={handleNextVerse}
+              disabled={currentVerseIndex + 1 >= verses.length}
+              className="p-1.5 text-stone-400 hover:text-white transition disabled:opacity-30"
+              title="Next Verse"
+            >
+              <SkipForward className="w-4 h-4" />
+            </button>
+
+            {/* Live Equalizer */}
+            <div className="hidden md:flex items-center space-x-1 h-5 px-2 bg-[#18130E] rounded-lg border border-stone-800">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1 rounded-full bg-[#F59E0B] transition-all duration-300 ${
+                    isPlaying ? `animate-wave-${(i % 5) + 1}` : 'h-1.5 opacity-30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Speed & Volume */}
+          <div className="flex items-center space-x-2">
+            {[0.75, 1, 1.25].map((rate) => (
+              <button
+                key={rate}
+                onClick={() => handleSpeedChange(rate)}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition ${
+                  playbackRate === rate ? 'bg-[#F59E0B] text-[#0A0908]' : 'bg-[#18130E] text-stone-300 border border-stone-800'
+                }`}
+              >
+                {rate}x
+              </button>
+            ))}
+
+            <button
+              onClick={() => {
+                const newMute = !isMuted;
+                setIsMuted(newMute);
+                if (audioRef.current) audioRef.current.muted = newMute;
+              }}
+              className="p-2 text-stone-300 hover:text-white"
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-[#F59E0B]" />}
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
