@@ -97,7 +97,7 @@ export default function AboutUsModal({ isOpen, onClose }: AboutUsModalProps) {
               <div className="flex items-center space-x-2.5">
                 <Mail className="w-4 h-4 text-[#F59E0B] flex-shrink-0" />
                 <span>
-                  <strong>Inquiries:</strong> support@gyandharam.com | contact@gyandharam.com
+                  <strong>Official Email:</strong> gyandharamofficial@gmail.com
                 </span>
               </div>
             </div>

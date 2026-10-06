@@ -154,6 +154,16 @@ export default function AboutPage() {
               </div>
 
               <div className="flex items-center space-x-3">
+                <Mail className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <div>
+                  <span className="font-bold text-stone-200 block">Official Email:</span>
+                  <a href="mailto:gyandharamofficial@gmail.com" className="text-amber-300 hover:underline font-bold">
+                    gyandharamofficial@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
                 <Globe className="w-4 h-4 text-amber-400 flex-shrink-0" />
                 <div>
                   <span className="font-bold text-stone-200 block">Official Portal:</span>

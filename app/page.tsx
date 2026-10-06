@@ -281,6 +281,79 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── LUXURY FOOTER ────────────────────────────────────────── */}
+      <footer className="mt-20 border-t border-[#F59E0B]/20 bg-[#080604] pt-12 pb-24 text-stone-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10 text-xs">
+            {/* Brand Col */}
+            <div className="space-y-3 md:col-span-1">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#F59E0B]/50 bg-[#18130E]">
+                  <img src="/logo.jpg" alt="GyanDharam" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-heading font-bold text-lg gold-gradient-text">GyanDharam</span>
+              </div>
+              <p className="text-stone-400 leading-relaxed">
+                Universal Multi-Faith Digital Library &amp; Synchronized Voice Reader preserving sacred wisdom across Sanatan Dharma, Islam, Christianity, Sikhism, Buddhism, and Jainism.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-2.5">
+              <h4 className="font-heading font-bold text-sm text-[#FFFBEB]">Quick Navigation</h4>
+              <ul className="space-y-2">
+                <li><Link href="/library" className="hover:text-amber-300 transition">Sacred Library (6 Traditions)</Link></li>
+                <li><Link href="/interactive-audio" className="hover:text-amber-300 transition">Interactive Audio Studio (Vani)</Link></li>
+                <li><Link href="/my-shelf" className="hover:text-amber-300 transition">My Devout Reading Shelf</Link></li>
+                <li><Link href="/sabha" className="hover:text-amber-300 transition">Live Sabha &amp; Satsang Room</Link></li>
+                <li><Link href="/about" className="hover:text-amber-300 transition">About Us &amp; Verification</Link></li>
+              </ul>
+            </div>
+
+            {/* Sacred Traditions */}
+            <div className="space-y-2.5">
+              <h4 className="font-heading font-bold text-sm text-[#FFFBEB]">Sacred Scriptures</h4>
+              <ul className="space-y-2">
+                <li><Link href="/reader/bhagavad-gita/1" className="hover:text-amber-300 transition">Shrimad Bhagavad Gita (श्रीमद्भगवद्गीता)</Link></li>
+                <li><Link href="/reader/the-holy-quran/1" className="hover:text-amber-300 transition">The Holy Quran (القرآن الكريم)</Link></li>
+                <li><Link href="/reader/the-holy-bible-psalms/1" className="hover:text-amber-300 transition">The Holy Bible (Psalms &amp; Gospels)</Link></li>
+                <li><Link href="/reader/japji-sahib/1" className="hover:text-amber-300 transition">Sri Guru Granth Sahib (Japji Sahib)</Link></li>
+                <li><Link href="/reader/dhammapada/1" className="hover:text-amber-300 transition">The Dhammapada (बुद्ध वाणी)</Link></li>
+                <li><Link href="/reader/tattvartha-sutra/1" className="hover:text-amber-300 transition">Kalpa Sutra &amp; Tattvartha Sutra</Link></li>
+              </ul>
+            </div>
+
+            {/* Official Contact */}
+            <div className="space-y-2.5">
+              <h4 className="font-heading font-bold text-sm text-[#FFFBEB]">Official Contact</h4>
+              <div className="space-y-2 text-stone-400">
+                <p>
+                  <strong className="text-stone-200 block">Headquarters:</strong>
+                  Near Zero Mile Metro Station, Patna, Bihar - 800007, India
+                </p>
+                <p>
+                  <strong className="text-stone-200 block">Helpline / Phone:</strong>
+                  <a href="tel:+917488482052" className="text-amber-300 hover:underline">+91-74884-82052</a>
+                </p>
+                <p>
+                  <strong className="text-stone-200 block">Official Email:</strong>
+                  <a href="mailto:gyandharamofficial@gmail.com" className="text-amber-300 hover:underline">gyandharamofficial@gmail.com</a>
+                </p>
+                <p>
+                  <strong className="text-stone-200 block">Portal:</strong>
+                  <a href="https://www.gyandharam.com/" className="text-amber-300 hover:underline">https://www.gyandharam.com/</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-stone-800/80 text-center text-xs text-stone-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© 2026 GyanDharam. All Rights Reserved. Universal Multi-Faith Digital Preservation.</p>
+            <p className="text-amber-400/80">BORI • SGPC • King Fahd Complex • PTS Certified Standard</p>
+          </div>
+        </div>
+      </footer>
+
       {/* ── PERSISTENT BOTTOM-RIGHT AUDIO PLAYER ───────────────────── */}
       <GlobalAudioPlayer
         currentTrack={activeTrack}
