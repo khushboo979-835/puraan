@@ -142,6 +142,9 @@ export default function InteractiveReader({
       stageTimerRef.current = null;
     }
 
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     if (synthRef.current) {
       synthRef.current.cancel();
     }
@@ -377,21 +380,16 @@ export default function InteractiveReader({
 
   // Toggle Play / Pause
   const togglePlay = () => {
-    if (audioMode === 'vocal') {
-      if (isPlaying) {
-        stopAllAudioAndRecitation();
-      } else {
+    if (isPlaying) {
+      stopAllAudioAndRecitation();
+    } else {
+      if (audioMode === 'vocal') {
         setIsPlaying(true);
         isPlayingRef.current = true;
         speakVerse(currentVerseIndex);
-      }
-    } else {
-      // Instrumental Mode
-      if (!audioRef.current) return;
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
       } else {
+        // Instrumental Mode
+        if (!audioRef.current) return;
         audioRef.current
           .play()
           .then(() => setIsPlaying(true))
@@ -400,8 +398,14 @@ export default function InteractiveReader({
     }
   };
 
-  // When user clicks ANY verse, immediately speak/jump to that verse!
+  // When user clicks ANY verse, immediately speak/jump to that verse, or pause if already playing!
   const handleVerseClick = (verse: VerseItem, index: number) => {
+    if (activeSentenceId === verse.sentenceId && isPlaying) {
+      // Tapping the currently playing verse card pauses it!
+      stopAllAudioAndRecitation();
+      return;
+    }
+
     setActiveSentenceId(verse.sentenceId);
     setCurrentVerseIndex(index);
 
@@ -411,9 +415,7 @@ export default function InteractiveReader({
       if (audioRef.current) {
         audioRef.current.currentTime = verse.startTime;
         setCurrentTime(verse.startTime);
-        if (!isPlaying) {
-          audioRef.current.play().then(() => setIsPlaying(true));
-        }
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
       }
     }
     saveBookmark(verse.sentenceId, verse.startTime);
@@ -1054,15 +1056,19 @@ export default function InteractiveReader({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleVerseClick(verse, index);
+                        if (isActive && isPlaying) {
+                          stopAllAudioAndRecitation();
+                        } else {
+                          handleVerseClick(verse, index);
+                        }
                       }}
-                      className="p-2 rounded-xl bg-[#1f0f00] text-[#ffd99e] hover:bg-[#381b00] transition shadow-xs flex items-center justify-center"
-                      title="Speak this verse"
+                      className="p-2 sm:p-2.5 rounded-xl bg-[#1f0f00] text-[#ffd99e] hover:bg-[#381b00] transition shadow-md flex items-center justify-center cursor-pointer"
+                      title={isActive && isPlaying ? "Pause Recitation (विराम)" : "Speak this verse (पाठ शुरू करें)"}
                     >
                       {isActive && isPlaying ? (
-                        <Pause className="w-4 h-4 fill-[#ffd99e]" />
+                        <Pause className="w-5 h-5 fill-[#ffd99e]" />
                       ) : (
-                        <Play className="w-4 h-4 fill-[#ffd99e] ml-0.5" />
+                        <Play className="w-5 h-5 fill-[#ffd99e] ml-0.5" />
                       )}
                     </button>
                   </div>
