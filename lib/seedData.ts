@@ -244,7 +244,7 @@ export const SEED_BOOKS: SeedBook[] = [
     ]
   },
   {
-    title: 'Sri Japji Sahib & Guru Granth Sahib (ਜਪੁਜੀ ਸਾਹਿਬ)',
+    title: 'Sri Guru Granth Sahib & Japji Sahib (ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ)',
     slug: 'japji-sahib',
     religion: 'Sikhism',
     language: 'Gurmukhi & Hindi',
@@ -376,7 +376,7 @@ export const SEED_BOOKS: SeedBook[] = [
     ]
   },
   {
-    title: 'Tattvartha Sutra (तत्त्वार्थ सूत्र)',
+    title: 'Kalpa Sutra & Tattvartha Sutra (कल्प सूत्र एवं तत्त्वार्थ सूत्र)',
     slug: 'tattvartha-sutra',
     religion: 'Jainism',
     language: 'Sanskrit & Hindi',
