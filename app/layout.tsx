@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: 'GyanDharam | Universal Scripture Library & Audio Synced Reader',
   description:
     'GyanDharam (gyandharam.com) - Experience holy scriptures across Hinduism, Islam, Christianity, Sikhism, Buddhism, and Jainism with interactive synchronized audio recitation and DRM-protected watermarked PDF downloads.',
+  verification: {
+    google: 'kNKjKt6k7SOkfXyoldjRQf969n2XJ86aI-dzF_9HKiQ',
+  },
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
