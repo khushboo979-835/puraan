@@ -2,7 +2,18 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Flame, BookOpen, Download, X, ChevronRight, Award, Info, Heart, CheckCircle2 } from 'lucide-react';
+import {
+  Sparkles,
+  Flame,
+  BookOpen,
+  Download,
+  X,
+  ChevronRight,
+  Award,
+  Info,
+  CheckCircle2,
+  Maximize2
+} from 'lucide-react';
 
 export default function NavratriBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -10,104 +21,134 @@ export default function NavratriBanner() {
 
   if (isDismissed) {
     return (
-      <div className="bg-[#2B040B] border-b border-amber-500/30 py-1.5 px-4 text-center">
+      <aside aria-label="Navratri Festive Offer" className="bg-gradient-to-r from-[#200206] via-[#3B0510] to-[#200206] border-b border-amber-500/40 py-2 px-4 text-center shadow-md">
         <button
           onClick={() => setIsDismissed(false)}
-          className="text-xs font-bold text-amber-300 hover:text-amber-200 inline-flex items-center gap-1.5 transition cursor-pointer"
+          className="text-xs sm:text-sm font-bold text-amber-300 hover:text-amber-100 inline-flex items-center gap-2 transition cursor-pointer"
         >
+          <img
+            src="/durga-maa.jpg"
+            alt="Maa Durga"
+            className="w-5 h-5 rounded-full object-cover border border-amber-400"
+          />
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
-          <span>🌺 नवरात्रि व दुर्गा पूजा विशेष ऑफर: संपूर्ण श्री दुर्गा सप्तशती पाठ निःशुल्क उपलब्ध (क्लिक करें)</span>
+          <span>🌺 नवरात्रि व दुर्गा पूजा महापर्व: संपूर्ण श्री दुर्गा सप्तशती पाठ निःशुल्क उपलब्ध (बैनर देखें ↗)</span>
         </button>
-      </div>
+      </aside>
     );
   }
 
   return (
     <>
-      {/* Top Announcement Banner */}
-      <div className="relative z-50 bg-gradient-to-r from-[#240308] via-[#480614] to-[#240308] border-b border-amber-500/40 text-stone-100 shadow-[0_4px_25px_rgba(72,6,20,0.6)]">
-        {/* Subtle festive background pattern overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+      {/* ── EXPANDED PROFESSIONAL FESTIVE NAVRATRI BANNER ── */}
+      <aside aria-label="Navratri Festive Offer" className="relative z-50 bg-gradient-to-r from-[#170104] via-[#35040F] to-[#170104] border-b-2 border-amber-400/50 text-stone-100 shadow-[0_10px_35px_rgba(53,4,15,0.7)] transition-all">
+        {/* Subtle decorative glow overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/15 via-rose-500/5 to-transparent pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 relative flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Left Column: Festive Badge & Offer Headline */}
-          <div className="flex items-center space-x-3 text-center sm:text-left">
-            <div className="hidden sm:flex w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 p-0.5 shadow-lg flex-shrink-0 animate-pulse">
-              <div className="w-full h-full rounded-full bg-[#200206] flex items-center justify-center text-amber-300 text-lg">
-                🔱
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 relative">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            
+            {/* Left: Maa Durga Divine Portrait & Title Info */}
+            <div className="flex items-center space-x-3.5 sm:space-x-5 w-full lg:w-auto">
+              {/* Divine Maa Durga Image Frame */}
+              <div className="relative flex-shrink-0 group">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden p-0.5 bg-gradient-to-tr from-amber-400 via-rose-500 to-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.55)] group-hover:shadow-[0_0_35px_rgba(245,158,11,0.85)] group-hover:scale-105 transition-all duration-300">
+                  <div className="w-full h-full rounded-[14px] overflow-hidden bg-[#240207] relative">
+                    <img
+                      src="/durga-maa.jpg"
+                      alt="Maa Durga Sherawali Devi"
+                      className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Auspicious Trishul Badge */}
+                <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center border border-stone-950 shadow-md">
+                  🔱
+                </div>
+              </div>
+
+              {/* Text Information */}
+              <div className="flex flex-col min-w-0">
+                {/* Badges Row */}
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-sm flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> नवरात्रि व दुर्गा पूजा विशेष
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/80 text-rose-200 border border-rose-500/40">
+                    100% निःशुल्क चंडी पाठ
+                  </span>
+                  <span className="text-[11px] font-semibold text-amber-300/90 hidden sm:inline">
+                    • गीता प्रेस गोरखपुर कोड 118
+                  </span>
+                </div>
+
+                {/* Main Headline */}
+                <h2 className="text-base sm:text-xl font-heading font-black text-[#FEF3C7] tracking-tight leading-tight flex items-center gap-1.5">
+                  <span>सम्पूर्ण श्री दुर्गा सप्तशती (चंडी पाठ) अब ज्ञानधर्म पर लाइव</span>
+                  <span className="text-amber-400 text-sm hidden md:inline">॥ ॐ दुं दुर्गायै नमः ॥</span>
+                </h2>
+
+                {/* Subtitle */}
+                <p className="text-xs sm:text-[13px] text-stone-300/90 font-sans mt-0.5 line-clamp-1 sm:line-clamp-none">
+                  13 अध्याय • 700 श्लोक • शब्दशः हिंदी व अंग्रेजी भावार्थ • AI वोकल रिसाइटेशन • मूल गीता प्रेस PDF
+                </p>
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 shadow-xs flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> नवरात्रि व दुर्गा पूजा महामहोत्सव ऑफर
-                </span>
-                <span className="text-[11px] font-bold text-amber-300/90 hidden md:inline">
-                  • 100% निःशुल्क चंडी पाठ
-                </span>
-              </div>
+            {/* Right: High-Impact Action Buttons */}
+            <div className="flex items-center flex-wrap justify-center sm:justify-end gap-2.5 flex-shrink-0 w-full lg:w-auto pt-1 lg:pt-0 border-t border-amber-500/20 lg:border-t-0">
+              {/* Start Free Reading CTA */}
+              <Link
+                href="/reader/durga-saptashati/1"
+                className="py-2 sm:py-2.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-stone-950 text-xs sm:text-sm font-black shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:scale-105 transition flex items-center space-x-1.5 border border-amber-300 cursor-pointer"
+              >
+                <span>🔱 निःशुल्क पाठ शुरू करें</span>
+                <ChevronRight className="w-4 h-4 stroke-[3]" />
+              </Link>
 
-              <h2 className="text-sm sm:text-base font-heading font-black text-[#FEF3C7] tracking-tight mt-0.5">
-                सम्पूर्ण श्री दुर्गा सप्तशती (700 श्लोक • गीता प्रेस गोरखपुर) अब ज्ञानधर्म पर उपलब्ध!
-              </h2>
+              {/* Gita Press Original PDF */}
+              <a
+                href="https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 sm:py-2.5 px-3.5 sm:px-4 rounded-xl bg-[#3B0713] hover:bg-[#520A1A] text-amber-200 hover:text-white text-xs sm:text-sm font-bold border border-amber-500/40 transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
+                title="गीता प्रेस गोरखपुर की मूल PDF डाउनलोड करें"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-400" />
+                <span>गीता प्रेस PDF</span>
+              </a>
 
-              <p className="text-[11px] text-stone-300/90 font-sans hidden lg:block mt-0.5">
-                श्लोकवार संस्कृत, शुद्ध हिंदी व अंग्रेजी भावार्थ, AI वोकल रिसाइटेशन, एवं मूल गीता प्रेस PDF का निःशुल्क संग्रह।
-              </p>
+              {/* Vidhi & Significance Modal Trigger */}
+              <button
+                onClick={() => setVidhiModalOpen(true)}
+                className="py-2 sm:py-2.5 px-3 sm:px-3.5 rounded-xl bg-[#200206] hover:bg-[#38040E] text-stone-300 hover:text-amber-300 text-xs sm:text-sm font-medium border border-stone-800 transition flex items-center space-x-1 cursor-pointer"
+                title="पाठ विधि एवं महत्व जानें"
+              >
+                <Info className="w-3.5 h-3.5 text-amber-400" />
+                <span>पाठ विधि</span>
+              </button>
+
+              {/* Minimize button */}
+              <button
+                onClick={() => setIsDismissed(true)}
+                className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-black/40 border border-stone-800/80 transition cursor-pointer ml-0.5"
+                aria-label="Minimize banner"
+                title="बैनर छोटा करें"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          </div>
 
-          {/* Right Column: Action Buttons */}
-          <div className="flex items-center flex-wrap justify-center gap-2 flex-shrink-0 w-full md:w-auto">
-            {/* Start Free Reading CTA */}
-            <Link
-              href="/reader/durga-saptashati/1"
-              className="py-1.5 sm:py-2 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-stone-950 text-xs sm:text-sm font-black shadow-[0_0_18px_rgba(245,158,11,0.45)] hover:scale-105 transition flex items-center space-x-1.5 border border-amber-300 cursor-pointer"
-            >
-              <span>🔱 निःशुल्क पाठ शुरू करें</span>
-              <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
-            </Link>
-
-            {/* Gita Press PDF Download */}
-            <a
-              href="https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 sm:py-2 px-3 rounded-xl bg-[#3B0813] hover:bg-[#520B1A] text-amber-200 hover:text-white text-xs font-bold border border-amber-500/30 transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
-              title="गीता प्रेस गोरखपुर की मूल PDF डाउनलोड करें"
-            >
-              <Download className="w-3.5 h-3.5 text-amber-400" />
-              <span>गीता प्रेस PDF</span>
-            </a>
-
-            {/* Chandi Path Vidhi Modal Trigger */}
-            <button
-              onClick={() => setVidhiModalOpen(true)}
-              className="py-1.5 sm:py-2 px-3 rounded-xl bg-[#200206] hover:bg-[#33050C] text-stone-300 hover:text-amber-300 text-xs font-medium border border-stone-800 transition flex items-center space-x-1 cursor-pointer"
-              title="पाठ विधि एवं महत्व जानें"
-            >
-              <Info className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">पाठ विधि</span>
-            </button>
-
-            {/* Dismiss / Minimize button */}
-            <button
-              onClick={() => setIsDismissed(true)}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-black/30 transition ml-1 cursor-pointer"
-              aria-label="Dismiss banner"
-              title="बैनर छोटा करें"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Durga Saptashati Vidhi & Significance Modal */}
+      {/* ── DURGA SAPTASHATI VIDHI & SIGNIFICANCE MODAL ── */}
       {vidhiModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#180308] border-2 border-amber-500/50 rounded-3xl max-w-2xl w-full p-6 sm:p-8 text-stone-100 shadow-[0_25px_80px_rgba(0,0,0,0.95)] max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#180308] border-2 border-amber-500/50 rounded-3xl max-w-2xl w-full p-6 sm:p-8 text-stone-100 shadow-[0_25px_80px_rgba(0,0,0,0.98)] max-h-[90vh] overflow-y-auto relative">
             {/* Close Button */}
             <button
               onClick={() => setVidhiModalOpen(false)}
@@ -117,12 +158,16 @@ export default function NavratriBanner() {
             </button>
 
             {/* Header */}
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-stone-950 font-black text-xl shadow-md flex-shrink-0">
-                🔱
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md flex-shrink-0">
+                <img
+                  src="/durga-maa.jpg"
+                  alt="Maa Durga"
+                  className="w-full h-full object-cover object-top"
+                />
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-md border border-amber-500/30">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/70 px-2.5 py-0.5 rounded-md border border-amber-500/30">
                   मार्कण्डेय पुराणोक्त देवी माहात्म्य
                 </span>
                 <h3 className="text-xl sm:text-2xl font-heading font-black text-[#FEF3C7] mt-1">
@@ -133,7 +178,7 @@ export default function NavratriBanner() {
 
             <div className="space-y-4 text-xs sm:text-sm font-sans text-stone-300 leading-relaxed">
               <div className="p-4 rounded-2xl bg-[#2A050D] border border-amber-500/30 text-amber-100">
-                <p className="font-serif italic">
+                <p className="font-serif italic text-sm">
                   <strong>॥ ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे ॥</strong><br />
                   "दुर्गासप्तशती पाठ एक दिव्य देवी उपासना ग्रंथ है, जिसमें सात सौ श्लोकों का समावेश किया गया है। इसके पाठ से सभी प्रकार के भय, बाधा और जीवन की परेशानियाँ दूर होकर सुख, समृद्धि और आत्मज्ञान की प्राप्ति होती है।"
                 </p>
