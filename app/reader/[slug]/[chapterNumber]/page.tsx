@@ -82,7 +82,11 @@ export default function ReaderPage() {
       const seedBook = SEED_BOOKS.find((b) => b.slug === slug);
       if (seedBook) {
         const seedChapter = seedBook.chapters.find((c) => c.chapterNumber === chapterNumber);
-        const isLocked = chapterNumber > 1 && !isPurchased('64f1a2b3c4d5e6f7a8b9c000');
+        const isLocked =
+          chapterNumber > 1 &&
+          (seedBook.price || 0) > 0 &&
+          seedBook.slug !== 'durga-saptashati' &&
+          !isPurchased('64f1a2b3c4d5e6f7a8b9c000');
 
         if (seedChapter) {
           setData({

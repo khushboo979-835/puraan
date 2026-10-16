@@ -3,14 +3,14 @@ import { Book, Chapter, User, IBook, IChapter, IUser } from '@/models';
 import { SEED_BOOKS } from './seedData';
 import mongoose from 'mongoose';
 
-// Check if database is empty, auto-seed if needed
+// Check if database has all seed books, auto-seed if needed
 export async function ensureSeeded() {
   try {
     await connectToDatabase();
-    const count = await Book.countDocuments();
-    if (count === 0) {
-      console.log('🔄 Database is empty, auto-seeding initial scriptures...');
-      for (const bookData of SEED_BOOKS) {
+    for (const bookData of SEED_BOOKS) {
+      const existing = await Book.findOne({ slug: bookData.slug });
+      if (!existing) {
+        console.log(`🔄 Seeding scripture: ${bookData.title}...`);
         const { chapters, ...bookFields } = bookData;
         const createdBook = await Book.create(bookFields);
         for (const ch of chapters) {
@@ -24,7 +24,6 @@ export async function ensureSeeded() {
           });
         }
       }
-      console.log('✅ Auto-seed completed successfully.');
     }
   } catch (err) {
     console.warn('MongoDB connection not available, operating in resilient memory mode:', err);
@@ -80,7 +79,7 @@ export async function getBookBySlug(slug: string) {
           title: c.title,
           summary: c.summary,
           versesCount: c.verses?.length || 0,
-          isFree: c.chapterNumber === 1,
+          isFree: c.chapterNumber === 1 || (book.price || 0) === 0 || book.slug === 'durga-saptashati',
         })),
       };
     }
@@ -98,7 +97,7 @@ export async function getBookBySlug(slug: string) {
       title: c.title,
       summary: c.summary,
       versesCount: c.verses.length,
-      isFree: c.chapterNumber === 1,
+      isFree: c.chapterNumber === 1 || (fallback.price || 0) === 0 || fallback.slug === 'durga-saptashati',
     })),
   };
 }

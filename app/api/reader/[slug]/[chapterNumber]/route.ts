@@ -39,9 +39,9 @@ export async function GET(
     }
 
     // DRM Access Control Rule:
-    // If chapterNumber == 1, return content publicly without restrictions.
-    // If chapterNumber > 1, check authentication and purchase ownership.
-    if (chapterNumber > 1) {
+    // If chapterNumber == 1, or book is free (e.g. Durga Saptashati Navratri Special), return content publicly without restrictions.
+    // If chapterNumber > 1 and book is paid, check authentication and purchase ownership.
+    if (chapterNumber > 1 && (book.price || 0) > 0 && book.slug !== 'durga-saptashati') {
       const user = await getCurrentUser(req);
       const isPurchased =
         user &&

@@ -111,7 +111,8 @@ export default function BookDetailsPage() {
     );
   }
 
-  const owned = book._id ? isPurchased(book._id) : false;
+  const isFreeBook = (book.price || 0) === 0 || book.slug === 'durga-saptashati';
+  const owned = (book._id ? isPurchased(book._id) : false) || isFreeBook;
 
   return (
     <div className="min-h-screen text-[#000000] py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
@@ -130,6 +131,13 @@ export default function BookDetailsPage() {
                 {book.religion}
               </span>
             </div>
+            {isFreeBook && (
+              <div className="absolute bottom-3 inset-x-3 text-center">
+                <span className="text-xs uppercase font-black tracking-wider text-white bg-gradient-to-r from-rose-700 to-amber-700 px-3 py-1.5 rounded-xl border border-amber-300 shadow-lg block">
+                  🌺 Navratri Special: 100% Free
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -139,10 +147,21 @@ export default function BookDetailsPage() {
             <span className="px-3 py-1 rounded-full bg-[#fff4d1] text-[#000000] text-xs font-black border-2 border-[#784805]">
               Critical Manuscript Edition
             </span>
-            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-950 text-xs font-black border-2 border-emerald-700">
-              Chapter 1 100% Free
-            </span>
-            {owned && (
+            {isFreeBook ? (
+              <>
+                <span className="px-3 py-1 rounded-full bg-rose-700 text-rose-100 text-xs font-black border-2 border-rose-950 animate-pulse">
+                  🌺 100% Free Complete Access (13 Chapters)
+                </span>
+                <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-950 text-xs font-black border-2 border-amber-700">
+                  गीता प्रेस गोरखपुर कोड 118
+                </span>
+              </>
+            ) : (
+              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-950 text-xs font-black border-2 border-emerald-700">
+                Chapter 1 100% Free
+              </span>
+            )}
+            {owned && !isFreeBook && (
               <span className="px-3 py-1 rounded-full bg-[#1a0e02] text-[#ffdc82] text-xs font-black border border-[#784805]">
                 ✓ Full Access Unlocked
               </span>
@@ -180,8 +199,10 @@ export default function BookDetailsPage() {
                 {isPlayingPreview ? <Pause className="w-4 h-4 fill-[#ffdc82]" /> : <Play className="w-4 h-4 fill-[#ffdc82] ml-0.5" />}
               </button>
               <div>
-                <p className="text-xs font-black text-[#000000]">Free Audio Preview (Chapter 1)</p>
-                <p className="text-[10px] text-[#2b1802] font-bold">Experience serene devotional acoustic recitation</p>
+                <p className="text-xs font-black text-[#000000]">
+                  {isFreeBook ? 'Devotional Chandi Recitation (Free Audio)' : 'Free Audio Preview (Chapter 1)'}
+                </p>
+                <p className="text-[10px] text-[#2b1802] font-bold">Experience serene acoustic shloka recitation with Tanpura drone</p>
               </div>
             </div>
 
@@ -191,16 +212,40 @@ export default function BookDetailsPage() {
           </div>
 
           {/* Pricing & Unlock Buttons */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center gap-4">
+          <div className="pt-2 flex flex-col sm:flex-row flex-wrap items-center gap-3">
             <Link
               href={`/reader/${book.slug}/1`}
-              className="w-full sm:w-auto flex-1 py-3.5 px-6 rounded-2xl bg-[#1a0e02] hover:bg-[#381e04] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#1a0e02] via-[#351a02] to-[#1a0e02] hover:bg-[#381e04] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2"
             >
               <Play className="w-4 h-4 fill-[#ffdc82]" />
-              <span>Read Chapter 1 Free (Audio Synced)</span>
+              <span>
+                {isFreeBook
+                  ? '🔱 Start Free Path (सभी 13 अध्याय निःशुल्क पढ़ें)'
+                  : 'Read Chapter 1 Free (Audio Synced)'}
+              </span>
             </Link>
 
-            {owned ? (
+            {isFreeBook ? (
+              <>
+                <a
+                  href="https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-[#991b1b] hover:bg-[#7f1d1d] text-white font-black text-sm text-center shadow-md transition flex items-center justify-center space-x-2 border border-rose-400"
+                >
+                  <Download className="w-4 h-4 text-amber-300" />
+                  <span>गीता प्रेस PDF डाउनलोड</span>
+                </a>
+                <a
+                  href="https://instapdf.in/durga-saptashati/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto py-3.5 px-4 rounded-2xl bg-[#fff4d1] hover:bg-[#ffeab0] text-[#000000] font-black text-xs border-2 border-[#784805] transition shadow-xs flex items-center justify-center space-x-1"
+                >
+                  <span>InstaPDF स्रोत ↗</span>
+                </a>
+              </>
+            ) : owned ? (
               <a
                 href={`/api/download/${book._id}`}
                 className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white font-black text-sm text-center shadow-lg transition flex items-center justify-center space-x-2"
@@ -258,7 +303,7 @@ export default function BookDetailsPage() {
 
         <div className="space-y-3">
           {book.chapters?.map((ch: any) => {
-            const isChapterFree = ch.chapterNumber === 1;
+            const isChapterFree = ch.chapterNumber === 1 || isFreeBook;
             const canAccess = isChapterFree || owned;
 
             return (
@@ -275,7 +320,11 @@ export default function BookDetailsPage() {
                     <span className="font-heading font-black text-[#000000] text-xs">
                       Chapter {ch.chapterNumber}
                     </span>
-                    {isChapterFree ? (
+                    {isFreeBook ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-700 text-white border border-rose-950">
+                        🌺 100% Free Navratri Access
+                      </span>
+                    ) : isChapterFree ? (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-950 border border-emerald-700">
                         100% Free Audio & Text
                       </span>
@@ -302,7 +351,7 @@ export default function BookDetailsPage() {
                       className="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-[#1a0e02] hover:bg-[#331c04] text-[#ffdc82] font-black text-xs flex items-center justify-center space-x-1.5 transition shadow-xs border border-[#784805]"
                     >
                       <Play className="w-3.5 h-3.5 fill-[#ffdc82]" />
-                      <span>{isChapterFree ? 'Read Free Chapter 1' : 'Launch Reader'}</span>
+                      <span>{isFreeBook ? 'Read Free Adhyay' : isChapterFree ? 'Read Free Chapter 1' : 'Launch Reader'}</span>
                     </Link>
                   ) : (
                     <button

@@ -77,8 +77,9 @@ export default function HomePage() {
     });
   };
 
-  // Re-order books to highlight the 6 main scriptures requested
+  // Re-order books to highlight featured scriptures with Durga Saptashati Navratri Special
   const orderedSlugPriority = [
+    'durga-saptashati',
     'bhagavad-gita',
     'the-holy-quran',
     'the-holy-bible-psalms',
@@ -96,7 +97,7 @@ export default function HomePage() {
 
   const filteredBooks =
     selectedReligion === 'All'
-      ? sortedBooks.slice(0, 6)
+      ? sortedBooks
       : SEED_BOOKS.filter((b) => b.religion === selectedReligion);
 
   return (

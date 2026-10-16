@@ -29,7 +29,11 @@ import {
   Flame,
   Radio,
   BookOpen,
-  Volume1
+  Volume1,
+  Bot,
+  Send,
+  MessageSquare,
+  X
 } from 'lucide-react';
 import UnlockCheckoutModal from './UnlockCheckoutModal';
 import { useAuth } from '@/context/AuthContext';
@@ -43,6 +47,11 @@ export interface VerseItem {
   transliteration?: string;
   startTime: number;
   endTime: number;
+  aiInsight?: {
+    symbolism: string;
+    lifeLesson: string;
+    mantraBenefit: string;
+  };
 }
 
 export interface ReaderProps {
@@ -142,6 +151,64 @@ export default function InteractiveReader({
   const verseElementsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const verses = chapter?.verses || [];
+
+  // AI Spiritual Guide & Line-by-Line Explanation State
+  const [selectedVerseForAi, setSelectedVerseForAi] = useState<{ verse: VerseItem; index: number } | null>(null);
+  const [aiSpeaking, setAiSpeaking] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswersList, setAiAnswersList] = useState<{ [key: string]: string }>({});
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const stopAiVoice = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setAiSpeaking(false);
+    }
+  };
+
+  const toggleSpeakAi = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (aiSpeaking) {
+      stopAiVoice();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.88;
+    utterance.pitch = 1.0;
+    utterance.onend = () => setAiSpeaking(false);
+    utterance.onerror = () => setAiSpeaking(false);
+    setAiSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleAskAi = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiQuestion.trim() || !selectedVerseForAi) return;
+    const q = aiQuestion.trim();
+    setAiLoading(true);
+
+    setTimeout(() => {
+      let answer = '';
+      const lower = q.toLowerCase();
+      const verse = selectedVerseForAi.verse;
+
+      if (lower.includes('जाप') || lower.includes('पाठ') || lower.includes('फल') || lower.includes('benefit')) {
+        answer = `इस पावन श्लोक का पाठ करने से: ${verse.aiInsight?.mantraBenefit || 'चित्त की शुद्धि, भय व विघ्नों से मुक्ति तथा माँ जगदम्बा का दिव्य संरक्षण प्राप्त होता है।'}`;
+      } else if (lower.includes('अर्थ') || lower.includes('प्रतीक') || lower.includes('रहस्य') || lower.includes('symbolism') || lower.includes('meaning')) {
+        answer = `इस श्लोक का गूढ़ आध्यात्मिक रहस्य: ${verse.aiInsight?.symbolism || verse.hindiTranslation}। यह साधक को आंतरिक विकारों (काम, क्रोध, अहंकार) पर विजय प्राप्त करने की प्रेरणा देता है।`;
+      } else if (lower.includes('जीवन') || lower.includes('सीख') || lower.includes('lesson') || lower.includes('practical')) {
+        answer = `दैनिक जीवन के लिए व्यावहारिक संदेश: ${verse.aiInsight?.lifeLesson || 'परिस्थितियों से भयभीत हुए बिना धर्म, सत्य और संयम पर अडिग रहें। अंततः विजय सत्य की ही होती है।'}`;
+      } else {
+        answer = `ज्ञानधर्म AI आध्यात्मिक विश्लेषण: श्लोक "${verse.originalScript}" के माध्यम से महर्षि मार्कण्डेय हमें सिखाते हैं कि पराशक्ति जगदम्बा ही समस्त शक्तियों का मूल स्रोत हैं। ${verse.aiInsight?.symbolism || verse.hindiTranslation}। श्रद्धापूर्वक इसके पठन व मनन से जीवन की समस्त नकारात्मकता समाप्त हो जाती है। ${verse.aiInsight?.mantraBenefit || ''}`;
+      }
+
+      setAiAnswersList((prev) => ({ ...prev, [q]: answer }));
+      setAiQuestion('');
+      setAiLoading(false);
+    }, 500);
+  };
 
   // Stop everything cleanly
   const stopAllAudioAndRecitation = () => {
@@ -900,8 +967,20 @@ export default function InteractiveReader({
                     )}
                   </div>
 
-                  {/* Verse Play Button */}
-                  <div className="flex-shrink-0">
+                  {/* Verse Action Buttons */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedVerseForAi({ verse, index });
+                      }}
+                      className="py-1.5 px-2.5 sm:py-2 sm:px-3 rounded-xl bg-gradient-to-r from-[#2B050E] to-[#450917] hover:from-[#450917] hover:to-[#5E0C20] text-amber-300 border border-amber-500/40 hover:scale-105 transition shadow-sm flex items-center justify-center cursor-pointer gap-1.5"
+                      title="AI दिव्य भावार्थ एवं तत्त्वार्थ (Ask AI Guru)"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                      <span className="text-[11px] font-bold">AI व्याख्या</span>
+                    </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1047,6 +1126,188 @@ export default function InteractiveReader({
           window.location.reload();
         }}
       />
+
+      {/* ── AI SPIRITUAL GURU / SHLOKA EXPLANATION MODAL ── */}
+      {selectedVerseForAi && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#14060A] border-2 border-amber-500/50 rounded-3xl max-w-2xl w-full p-6 sm:p-8 text-stone-100 shadow-[0_25px_80px_rgba(0,0,0,0.95)] max-h-[92vh] overflow-y-auto relative">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                stopAiVoice();
+                setSelectedVerseForAi(null);
+              }}
+              className="absolute top-5 right-5 p-2 rounded-full bg-[#2A050D] text-stone-300 hover:text-white border border-amber-500/30 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-stone-950 font-black shadow-lg flex-shrink-0">
+                <Bot className="w-6 h-6 text-stone-950" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/70 px-2.5 py-0.5 rounded-md border border-amber-500/30">
+                    ज्ञानधर्म AI आध्यात्मिक गुरु
+                  </span>
+                  <span className="text-[10px] font-bold text-rose-300">
+                    श्लोक {selectedVerseForAi.index + 1}
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-heading font-black text-[#FEF3C7] mt-1">
+                  दिव्य तत्त्वार्थ एवं जीवन दर्शन
+                </h3>
+              </div>
+            </div>
+
+            {/* Sacred Verse Highlight */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#2B040D] to-[#1F0309] border border-amber-500/40 mb-4 shadow-sm">
+              <p className="font-serif text-lg sm:text-xl text-[#FFFBEB] font-semibold leading-relaxed">
+                {selectedVerseForAi.verse.originalScript}
+              </p>
+              {selectedVerseForAi.verse.transliteration && (
+                <p className="text-xs font-sans italic text-amber-200/70 mt-1.5">
+                  {selectedVerseForAi.verse.transliteration}
+                </p>
+              )}
+              {selectedVerseForAi.verse.hindiTranslation && (
+                <p className="text-xs sm:text-sm font-sans text-stone-200 mt-2 pt-2 border-t border-amber-500/20">
+                  <strong className="text-amber-400 font-bold">सरल भावार्थ:</strong> {selectedVerseForAi.verse.hindiTranslation}
+                </p>
+              )}
+            </div>
+
+            {/* Speak AI Explanation Button */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
+              <span className="text-xs font-bold text-stone-300">
+                AI गुरु वाणी (Audio Explanation):
+              </span>
+              <button
+                onClick={() => {
+                  const insightText = `${selectedVerseForAi.verse.originalScript}। इसका सरल अर्थ है: ${selectedVerseForAi.verse.hindiTranslation}। आध्यात्मिक रहस्य: ${selectedVerseForAi.verse.aiInsight?.symbolism || ''}। जीवन में संदेश: ${selectedVerseForAi.verse.aiInsight?.lifeLesson || ''}। मंत्र लाभ: ${selectedVerseForAi.verse.aiInsight?.mantraBenefit || ''}`;
+                  toggleSpeakAi(insightText);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 border cursor-pointer ${
+                  aiSpeaking
+                    ? 'bg-rose-700 text-white border-rose-500 animate-pulse'
+                    : 'bg-[#2A050D] hover:bg-[#3D0814] text-amber-300 border-amber-500/40'
+                }`}
+              >
+                {aiSpeaking ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5" /> वाणी विराम (Stop Voice)
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-amber-400" /> 🔊 AI से व्याख्या सुनें
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* AI Insights 3-Pillar Cards */}
+            <div className="space-y-3 mb-5">
+              {/* Symbolism */}
+              <div className="p-3.5 rounded-2xl bg-[#1C050B] border border-amber-500/30">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>गूढ़ आध्यात्मिक रहस्य एवं प्रतीक (Esoteric Symbolism)</span>
+                </div>
+                <p className="text-xs sm:text-[13px] text-stone-300 leading-relaxed">
+                  {selectedVerseForAi.verse.aiInsight?.symbolism ||
+                    'इस पावन श्लोक के माध्यम से महर्षि हमें चेतना के उच्चतर स्तर की ओर ले जाते हैं, जहाँ अज्ञान और तमोगुणी वृत्तियों का शमन होकर आत्म-साक्षात्कार का प्रकाश फैलता है।'}
+                </p>
+              </div>
+
+              {/* Practical Life Lesson */}
+              <div className="p-3.5 rounded-2xl bg-[#1C050B] border border-amber-500/30">
+                <div className="flex items-center gap-2 text-rose-300 font-bold text-xs mb-1">
+                  <BookOpen className="w-3.5 h-3.5 text-rose-400" />
+                  <span>दैनिक जीवन में व्यावहारिक संदेश (Life Application)</span>
+                </div>
+                <p className="text-xs sm:text-[13px] text-stone-300 leading-relaxed">
+                  {selectedVerseForAi.verse.aiInsight?.lifeLesson ||
+                    'कठिन से कठिन चुनौतियों में भी धैर्य और आंतरिक निष्ठा बनाए रखें। सत्य और धर्म का मार्ग ही स्थायी शांति और आत्मबल प्रदान करता है।'}
+                </p>
+              </div>
+
+              {/* Mantra Energy & Phalasruti */}
+              <div className="p-3.5 rounded-2xl bg-[#1C050B] border border-amber-500/30">
+                <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs mb-1">
+                  <Flame className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>मंत्र शक्ति व पाठ फल (Mantra Energy & Phalasruti)</span>
+                </div>
+                <p className="text-xs sm:text-[13px] text-stone-300 leading-relaxed">
+                  {selectedVerseForAi.verse.aiInsight?.mantraBenefit ||
+                    'इस श्लोक का शुद्ध भाव से पाठ करने से मन की व्यग्रता समाप्त होती है, नकारात्मक ऊर्जा दूर होती है और शुभ संकल्पों की सिद्धि होती है।'}
+                </p>
+              </div>
+            </div>
+
+            {/* Interactive Ask AI Question Box */}
+            <div className="pt-4 border-t border-stone-800">
+              <h4 className="text-xs font-bold text-amber-300 mb-2 flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-amber-400" /> AI आध्यात्मिक संवाद (Ask AI Guru)
+              </h4>
+
+              {/* Q&A History */}
+              <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                {Object.entries(aiAnswersList).map(([question, answer], i) => (
+                  <div key={i} className="p-3 rounded-xl bg-[#24060E] border border-amber-500/20 text-xs space-y-1">
+                    <p className="font-bold text-amber-200">प्रश्न: {question}</p>
+                    <p className="text-stone-300 leading-relaxed">{answer}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Prompt Chips */}
+              <div className="flex flex-wrap gap-1.5 mb-2.5">
+                {[
+                  'इस श्लोक के पाठ का क्या लाभ है?',
+                  'दैनिक जीवन में इसका क्या महत्व है?',
+                  'सप्तशती के इस प्रसंग का गूढ़ रहस्य क्या है?',
+                ].map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => {
+                      setAiQuestion(chip);
+                    }}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-[#2A050D] hover:bg-[#3D0814] text-stone-300 hover:text-amber-200 border border-stone-800 transition cursor-pointer"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleAskAi} className="flex gap-2">
+                <input
+                  type="text"
+                  value={aiQuestion}
+                  onChange={(e) => setAiQuestion(e.target.value)}
+                  placeholder="इस श्लोक या चंडी पाठ के बारे में कुछ भी पूछें..."
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-[#0F0205] border border-stone-800 text-xs text-stone-100 placeholder:text-stone-500 focus:outline-none focus:border-amber-400 transition"
+                />
+                <button
+                  type="submit"
+                  disabled={aiLoading || !aiQuestion.trim()}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-stone-950 font-black text-xs transition flex items-center gap-1 cursor-pointer"
+                >
+                  {aiLoading ? (
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <span>पूछें</span>
+                      <Send className="w-3 h-3" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

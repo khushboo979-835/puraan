@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import MegaMenu from '@/components/MegaMenu';
 import CommandPaletteModal from '@/components/CommandPaletteModal';
+import NavratriBanner from '@/components/NavratriBanner';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -49,6 +50,7 @@ export default function Navbar() {
 
   return (
     <>
+      <NavratriBanner />
       <header className="sticky top-0 z-40 bg-[#0A0908]/95 backdrop-blur-2xl border-b border-[#F59E0B]/20 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">

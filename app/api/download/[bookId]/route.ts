@@ -46,7 +46,8 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
       (user.purchasedBooks.some((pId: any) => pId.toString() === targetBookId) ||
         user.purchasedBooks.some((pId: any) => pId.toString() === bookId));
 
-    if (!isPurchased) {
+    const isFreeBook = (book.price || 0) === 0 || book.slug === 'durga-saptashati';
+    if (!isPurchased && !isFreeBook) {
       return NextResponse.json(
         {
           error: 'Forbidden: You do not own a digital license for this scripture.',

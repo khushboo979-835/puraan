@@ -18,6 +18,7 @@ const FAITH_CATEGORIES = [
     count: '18 Puranas & Gita',
     verses: '15,400+ Shlokas',
     books: [
+      { title: 'Shri Durga Saptashati (चंडी पाठ)', slug: 'durga-saptashati' },
       { title: 'Shrimad Bhagavad Gita', slug: 'bhagavad-gita' },
       { title: 'Agni Puran', slug: 'agni-puran' },
     ],
