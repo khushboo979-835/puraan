@@ -39,6 +39,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5332737099998599"
+          crossOrigin="anonymous"
+        />
         {/* Load Razorpay Checkout Script */}
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
