@@ -23,7 +23,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import MegaMenu from '@/components/MegaMenu';
 import CommandPaletteModal from '@/components/CommandPaletteModal';
-import NavratriBanner from '@/components/NavratriBanner';
+import DiwaliChhathBanner from '@/components/DiwaliChhathBanner';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -50,7 +50,7 @@ export default function Navbar() {
 
   return (
     <>
-      <NavratriBanner />
+      <DiwaliChhathBanner />
       <header className="sticky top-0 z-40 bg-[#0A0908]/95 backdrop-blur-2xl border-b border-[#F59E0B]/20 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
@@ -143,6 +143,24 @@ export default function Navbar() {
               >
                 About Us
               </Link>
+
+              {/* Diwali & Chhath Puja Festive Offer Badge */}
+              <button
+                onClick={() => {
+                  const bannerBtn = document.querySelector('button[title*="पूजन विधि"]') as HTMLButtonElement;
+                  if (bannerBtn) bannerBtn.click();
+                  else {
+                    const fallback = document.querySelector('aside button') as HTMLButtonElement;
+                    if (fallback) fallback.click();
+                  }
+                }}
+                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/25 to-amber-500/10 border border-amber-400/50 text-amber-300 hover:text-amber-100 hover:border-amber-400 text-xs font-bold transition shadow-sm hover:scale-105 cursor-pointer"
+                title="शुभ दीपावली एवं छठ महापर्व विशेष ऑफर"
+              >
+                <span className="text-sm">🪔</span>
+                <span>दिवाली-छठ ऑफर</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+              </button>
 
               {/* Command Palette Trigger (Cmd+K) */}
               <button
@@ -262,6 +280,28 @@ export default function Navbar() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#120F0C] border-b border-stone-800 px-4 pt-2 pb-6 space-y-2 text-stone-200">
+            {/* Mobile Diwali & Chhath Puja Offer Banner */}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                const bannerBtn = document.querySelector('button[title*="पूजन विधि"]') as HTMLButtonElement;
+                if (bannerBtn) bannerBtn.click();
+                else {
+                  const fallback = document.querySelector('aside button') as HTMLButtonElement;
+                  if (fallback) fallback.click();
+                }
+              }}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500/25 via-orange-500/20 to-amber-500/10 border border-amber-400/50 text-amber-300"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🪔</span>
+                <span>दीपावली व छठ महापर्व ऑफर</span>
+              </div>
+              <span className="text-[10px] bg-amber-400 text-stone-950 px-2 py-0.5 rounded-full font-black">
+                100% FREE
+              </span>
+            </button>
+
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}

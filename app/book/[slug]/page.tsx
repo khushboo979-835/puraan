@@ -133,8 +133,8 @@ export default function BookDetailsPage() {
             </div>
             {isFreeBook && (
               <div className="absolute bottom-3 inset-x-3 text-center">
-                <span className="text-xs uppercase font-black tracking-wider text-white bg-gradient-to-r from-rose-700 to-amber-700 px-3 py-1.5 rounded-xl border border-amber-300 shadow-lg block">
-                  🌺 Navratri Special: 100% Free
+                <span className="text-xs uppercase font-black tracking-wider text-white bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 px-3 py-1.5 rounded-xl border border-amber-300 shadow-lg block">
+                  🪔 दीपोत्सव व छठ महापर्व विशेष: 100% Free
                 </span>
               </div>
             )}
@@ -149,8 +149,8 @@ export default function BookDetailsPage() {
             </span>
             {isFreeBook ? (
               <>
-                <span className="px-3 py-1 rounded-full bg-rose-700 text-rose-100 text-xs font-black border-2 border-rose-950 animate-pulse">
-                  🌺 100% Free Complete Access (13 Chapters)
+                <span className="px-3 py-1 rounded-full bg-amber-700 text-amber-100 text-xs font-black border-2 border-amber-950 animate-pulse">
+                  🪔 100% Free Complete Access (13 Chapters)
                 </span>
                 <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-950 text-xs font-black border-2 border-amber-700">
                   गीता प्रेस गोरखपुर कोड 118
@@ -321,8 +321,8 @@ export default function BookDetailsPage() {
                       Chapter {ch.chapterNumber}
                     </span>
                     {isFreeBook ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-700 text-white border border-rose-950">
-                        🌺 100% Free Navratri Access
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-700 text-white border border-amber-950">
+                        🪔 100% Free Festive Access (दीपावली व छठ महापर्व)
                       </span>
                     ) : isChapterFree ? (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-950 border border-emerald-700">

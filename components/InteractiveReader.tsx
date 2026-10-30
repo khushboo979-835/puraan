@@ -37,7 +37,13 @@ import {
 } from 'lucide-react';
 import UnlockCheckoutModal from './UnlockCheckoutModal';
 import { useAuth } from '@/context/AuthContext';
-import { FAITH_PROFILES, FaithType, SpiritualAmbientSynthesizer } from '@/lib/spiritualAudioEngine';
+import {
+  FAITH_PROFILES,
+  FaithType,
+  SpiritualAmbientSynthesizer,
+  prepareSanskritChantForTTS,
+  getPanditVoice,
+} from '@/lib/spiritualAudioEngine';
 
 export interface VerseItem {
   sentenceId: string;
@@ -103,7 +109,7 @@ export default function InteractiveReader({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [activeWordIndex, setActiveWordIndex] = useState<number>(-1);
-  const [playbackRate, setPlaybackRate] = useState(0.88);
+  const [playbackRate, setPlaybackRate] = useState(0.70);
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -284,27 +290,12 @@ export default function InteractiveReader({
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
 
-  // Select Voice matching the specific Faith Tradition
+  // Select Voice matching the specific Faith Tradition (Prioritizing Pandit voices for Vedic Sanskrit)
   const getFaithSpecificVoice = () => {
     if (!synthRef.current) return null;
     const voices = synthRef.current.getVoices().length > 0 ? synthRef.current.getVoices() : availableVoices;
     if (!voices || voices.length === 0) return null;
-
-    const preferred = faithProfile.preferredLangs;
-
-    // Search for matching preferred language voice
-    for (const lang of preferred) {
-      const match = voices.find((v) => v.lang.toLowerCase().replace('_', '-').startsWith(lang.toLowerCase()));
-      if (match) return match;
-    }
-
-    // Default Hindi or English voice
-    const fallback =
-      voices.find((v) => v.lang.startsWith('hi')) ||
-      voices.find((v) => v.lang.startsWith('en')) ||
-      voices[0];
-
-    return fallback;
+    return getPanditVoice(voices, faithKey);
   };
 
   // Speak a specific verse sequentially with real-time Word-by-Word Karaoke
@@ -386,13 +377,19 @@ export default function InteractiveReader({
       }
     };
 
-    // Stage 1: Speak Sacred Script with Word-by-Word Boundary Detection
+    // Stage 1: Speak Sacred Script with Pandit Cadence & Word-by-Word Boundary Detection
     const speakShlokaStage = () => {
       setRecitationStage('shloka');
-      const shlokaText = targetVerse.originalScript.replace(/\n+/g, ' । ').trim();
-      const words = shlokaText.split(/\s+/).filter(Boolean);
+      const originalClean = targetVerse.originalScript.replace(/\n+/g, ' । ').trim();
+      const words = originalClean.split(/\s+/).filter(Boolean);
 
-      const shlokaUtterance = new SpeechSynthesisUtterance(shlokaText);
+      // Authentically format Sanskrit for Pandit chanting with breathing pauses (यति/विराम)
+      const panditChantText =
+        faithKey === 'hinduism' || faithKey === 'jainism'
+          ? prepareSanskritChantForTTS(targetVerse.originalScript)
+          : originalClean;
+
+      const shlokaUtterance = new SpeechSynthesisUtterance(panditChantText);
       shlokaUtterance.lang = faithProfile.preferredLangs[0] || 'hi-IN';
       shlokaUtterance.rate = playbackRate * faithProfile.rate;
       shlokaUtterance.pitch = faithProfile.pitch;
@@ -408,8 +405,8 @@ export default function InteractiveReader({
         }
       };
 
-      // Fallback word simulation interval for browsers where onboundary is sparse
-      const estimatedMsPerWord = (600 / (playbackRate * faithProfile.rate));
+      // Fallback word simulation interval calibrated for peaceful Pandit chanting
+      const estimatedMsPerWord = Math.round(950 / (playbackRate * faithProfile.rate));
       let simWordIndex = 0;
       if (wordTimerRef.current) clearInterval(wordTimerRef.current);
       wordTimerRef.current = setInterval(() => {
@@ -430,7 +427,7 @@ export default function InteractiveReader({
           stageTimerRef.current = setTimeout(() => {
             if (!isPlayingRef.current) return;
             speakBhavarthStage();
-          }, 400);
+          }, 600);
         } else {
           advanceToNextVerse(index);
         }
@@ -1047,7 +1044,16 @@ export default function InteractiveReader({
                   Verse {currentVerseIndex + 1} of {verses.length}
                 </p>
                 <p className="text-[10px] text-amber-300/80 truncate">
-                  {faithProfile.name} • {isPlaying ? (recitationStage === 'shloka' ? 'Reciting Sacred Script' : 'Reciting Meaning') : 'Ready to Recite'}
+                  {faithProfile.name} •{' '}
+                  {isPlaying ? (
+                    recitationStage === 'shloka' ? (
+                      <span className="text-amber-400 font-bold">🪔 पंडित जी वैदिक पाठ (Slow Chanting)</span>
+                    ) : (
+                      <span className="text-amber-200">📖 हिंदी भावार्थ व्याख्या</span>
+                    )
+                  ) : (
+                    'Ready to Recite'
+                  )}
                 </p>
               </div>
             </div>
@@ -1082,17 +1088,22 @@ export default function InteractiveReader({
 
               {/* Speed Buttons */}
               <div className="flex items-center space-x-1 bg-[#18130E] p-1 rounded-xl border border-stone-800">
-                {[0.75, 1, 1.25].map((s) => (
+                {[
+                  { rate: 0.65, label: '0.65x (पंडित जी)', title: 'पंडित जी शांत वैदिक पाठ (Authentic Slow Pandit Cadence)' },
+                  { rate: 0.8, label: '0.8x', title: 'मध्यम पाठ (Balanced Recitation)' },
+                  { rate: 1.0, label: '1x', title: 'सामान्य गति (Standard Speed)' },
+                ].map((s) => (
                   <button
-                    key={s}
-                    onClick={() => handleSpeedChange(s)}
+                    key={s.rate}
+                    onClick={() => handleSpeedChange(s.rate)}
+                    title={s.title}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
-                      playbackRate === s
-                        ? 'bg-[#F59E0B] text-[#0A0908]'
+                      Math.abs(playbackRate - s.rate) < 0.05
+                        ? 'bg-[#F59E0B] text-[#0A0908] shadow-sm'
                         : 'text-stone-400 hover:text-white'
                     }`}
                   >
-                    {s}x
+                    {s.label}
                   </button>
                 ))}
               </div>

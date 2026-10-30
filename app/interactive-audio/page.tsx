@@ -20,7 +20,13 @@ import {
   Compass
 } from 'lucide-react';
 import { SEED_BOOKS } from '@/lib/seedData';
-import { FAITH_PROFILES, FaithType, SpiritualAmbientSynthesizer } from '@/lib/spiritualAudioEngine';
+import {
+  FAITH_PROFILES,
+  FaithType,
+  SpiritualAmbientSynthesizer,
+  prepareSanskritChantForTTS,
+  getPanditVoice,
+} from '@/lib/spiritualAudioEngine';
 
 export default function InteractiveAudioPage() {
   const [selectedBookIndex, setSelectedBookIndex] = useState(0);
@@ -28,7 +34,7 @@ export default function InteractiveAudioPage() {
   const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
   const [droneActive, setDroneActive] = useState(true);
   const [droneVolume, setDroneVolume] = useState(0.3);
-  const [speed, setSpeed] = useState(0.88);
+  const [speed, setSpeed] = useState(0.70);
   const [voiceMode, setVoiceMode] = useState<'both' | 'original' | 'hindi'>('both');
 
   const synthEngineRef = useRef<SpiritualAmbientSynthesizer | null>(null);
@@ -98,17 +104,26 @@ export default function InteractiveAudioPage() {
     }
 
     const verse = verses[idx];
+    const scriptToChant =
+      faithKey === 'hinduism' || faithKey === 'jainism'
+        ? prepareSanskritChantForTTS(verse.originalScript)
+        : verse.originalScript;
+
     const textToSpeak =
       voiceMode === 'hindi'
         ? verse.hindiTranslation
         : voiceMode === 'original'
-        ? verse.originalScript
-        : `${verse.originalScript} । भावार्थ: ${verse.hindiTranslation}`;
+        ? scriptToChant
+        : `${scriptToChant} ... भावार्थ: ${verse.hindiTranslation}`;
 
     const utt = new SpeechSynthesisUtterance(textToSpeak);
     utt.lang = faithProfile.preferredLangs[0] || 'hi-IN';
     utt.rate = speed * faithProfile.rate;
     utt.pitch = faithProfile.pitch;
+
+    const voices = synthRef.current.getVoices();
+    const pVoice = getPanditVoice(voices, faithKey);
+    if (pVoice) utt.voice = pVoice;
 
     utt.onend = () => {
       if (!isPlayingRef.current) return;
@@ -325,17 +340,22 @@ export default function InteractiveAudioPage() {
                   <span className="text-amber-300 font-bold">{speed}x</span>
                 </div>
                 <div className="flex gap-2">
-                  {[0.75, 0.88, 1.0, 1.25].map((s) => (
+                  {[
+                    { val: 0.65, label: '0.65x (पंडित जी)' },
+                    { val: 0.8, label: '0.8x' },
+                    { val: 1.0, label: '1x' },
+                    { val: 1.25, label: '1.25x' },
+                  ].map((s) => (
                     <button
-                      key={s}
-                      onClick={() => setSpeed(s)}
+                      key={s.val}
+                      onClick={() => setSpeed(s.val)}
                       className={`flex-1 py-1 rounded-lg text-[10px] font-bold transition ${
-                        speed === s
+                        Math.abs(speed - s.val) < 0.05
                           ? 'bg-[#F59E0B] text-[#0A0908]'
                           : 'bg-[#18130E] text-stone-400 border border-stone-800'
                       }`}
                     >
-                      {s}x
+                      {s.label}
                     </button>
                   ))}
                 </div>

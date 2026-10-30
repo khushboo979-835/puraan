@@ -18,15 +18,15 @@ export interface FaithAudioProfile {
 
 export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
   hinduism: {
-    name: 'Vedic Chant Profile',
+    name: 'Vedic Pandit Chant Profile (पंडित जी वैदिक पाठ)',
     faith: 'hinduism',
-    droneName: '432Hz Om & Tanpura Drone',
-    droneDescription: 'Cosmic 136.1Hz & 432Hz Vedic resonance with harmonic Tanpura sweep',
-    pitch: 0.84,
-    rate: 0.86,
-    bhavarthPitch: 0.95,
-    bhavarthRate: 0.92,
-    preferredLangs: ['hi-IN', 'sa-IN', 'hi', 'en-IN'],
+    droneName: '432Hz Om & Classical Tanpura Drone',
+    droneDescription: 'Cosmic 136.1Hz Om & 432Hz Vedic resonance with harmonic Tanpura strings',
+    pitch: 0.78, // Deep, reverent Pandit pitch
+    rate: 0.68,  // Slow, authentic Vedic chanting cadence (पंडित जी की तरह शांत व स्पष्ट)
+    bhavarthPitch: 0.90,
+    bhavarthRate: 0.82, // Clear, peaceful Hindi explanation
+    preferredLangs: ['sa-IN', 'hi-IN', 'sa', 'hi', 'en-IN'],
     droneColor: '#F59E0B',
   },
   islam: {
@@ -34,10 +34,10 @@ export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
     faith: 'islam',
     droneName: 'Acoustic Maqam Ambience',
     droneDescription: 'Soulful acoustic sanctuary reverb and solemn echo resonance',
-    pitch: 0.96,
-    rate: 0.82,
-    bhavarthPitch: 0.96,
-    bhavarthRate: 0.88,
+    pitch: 0.94,
+    rate: 0.78,
+    bhavarthPitch: 0.94,
+    bhavarthRate: 0.84,
     preferredLangs: ['ur-PK', 'ar-SA', 'ar', 'ur', 'hi-IN'],
     droneColor: '#10B981',
   },
@@ -46,10 +46,10 @@ export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
     faith: 'christianity',
     droneName: 'Cathedral Sacred Ambience',
     droneDescription: 'Warm, expressive classical sanctuary acoustic depth',
-    pitch: 1.0,
-    rate: 0.92,
-    bhavarthPitch: 1.0,
-    bhavarthRate: 0.95,
+    pitch: 0.98,
+    rate: 0.86,
+    bhavarthPitch: 0.98,
+    bhavarthRate: 0.90,
     preferredLangs: ['en-GB', 'en-IN', 'en-US', 'hi-IN'],
     droneColor: '#38BDF8',
   },
@@ -58,10 +58,10 @@ export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
     faith: 'sikhism',
     droneName: 'Sur-Mandal & Harmonium Drone',
     droneDescription: 'Devotional Sa-Pa harmonic acoustic resonance with spiritual warmth',
-    pitch: 0.88,
-    rate: 0.84,
-    bhavarthPitch: 0.94,
-    bhavarthRate: 0.9,
+    pitch: 0.86,
+    rate: 0.80,
+    bhavarthPitch: 0.92,
+    bhavarthRate: 0.86,
     preferredLangs: ['pa-IN', 'pa-PK', 'pa', 'hi-IN'],
     droneColor: '#FB923C',
   },
@@ -70,10 +70,10 @@ export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
     faith: 'buddhism',
     droneName: '528Hz Tibetan Singing Bowl',
     droneDescription: 'Deep calm, spaced-out Zen breathing frequency with bell chime',
-    pitch: 0.8,
-    rate: 0.78,
-    bhavarthPitch: 0.9,
-    bhavarthRate: 0.85,
+    pitch: 0.76,
+    rate: 0.72,
+    bhavarthPitch: 0.88,
+    bhavarthRate: 0.82,
     preferredLangs: ['hi-IN', 'en-IN', 'en', 'sa'],
     droneColor: '#EAB308',
   },
@@ -82,14 +82,107 @@ export const FAITH_PROFILES: Record<FaithType, FaithAudioProfile> = {
     faith: 'jainism',
     droneName: 'Navkar Serenity Drone',
     droneDescription: 'Gentle tranquil resonance for peaceful Prakrit & Sanskrit contemplation',
-    pitch: 0.86,
-    rate: 0.82,
-    bhavarthPitch: 0.94,
-    bhavarthRate: 0.9,
+    pitch: 0.82,
+    rate: 0.76,
+    bhavarthPitch: 0.90,
+    bhavarthRate: 0.84,
     preferredLangs: ['hi-IN', 'sa-IN', 'gu-IN', 'en-IN'],
     droneColor: '#EC4899',
   },
 };
+
+/**
+ * Formats Sanskrit shloka / mantra text for authentic Vedic Pandit chanting in Web Speech TTS.
+ * Inserts rhythmic breathing pauses (यति/विराम) at padas (quarter-verses), dandas, and line breaks so the
+ * speech synthesizer chants rhythmically like a temple priest.
+ */
+export function prepareSanskritChantForTTS(script: string): string {
+  if (!script) return '';
+
+  let text = script.trim();
+
+  // Split into lines
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+  const formattedLines = lines.map((line) => {
+    // Replace double dandas ॥ with prolonged solemn pause
+    let l = line.replace(/॥\s*(\d+)?\s*॥?/g, '... ').replace(/॥/g, '... ');
+    // Replace single danda । with a clear breathing pause
+    l = l.replace(/।/g, ', ');
+
+    // If a line is long without any comma or pause, split in middle for pada pause (यति)
+    // In Anushtup meter (16 syllables per line = 8 + 8), splitting near middle provides the vital pada pause
+    const words = l.split(/\s+/).filter(Boolean);
+    if (words.length >= 4 && !l.includes(',')) {
+      const mid = Math.floor(words.length / 2);
+      words[mid - 1] = words[mid - 1] + ',';
+      l = words.join(' ');
+    }
+    return l;
+  });
+
+  return formattedLines.join(' ... ');
+}
+
+/**
+ * Smart voice selector that prioritizes authentic Indian Hindi/Sanskrit male voices
+ * (such as Microsoft Hemant, Madhur, Google हिन्दी) so that Sanskrit recitation
+ * sounds dignified, natural, and like an authentic temple Pandit.
+ */
+export function getPanditVoice(
+  voices: SpeechSynthesisVoice[],
+  faith: FaithType | string = 'hinduism'
+): SpeechSynthesisVoice | null {
+  if (!voices || voices.length === 0) return null;
+
+  const normalizedFaith = faith.toLowerCase();
+
+  if (normalizedFaith === 'hinduism' || normalizedFaith === 'jainism') {
+    // 1. Check for specific authentic male Indian voices (sounds like a Pandit)
+    const panditMaleKeywords = ['hemant', 'madhur', 'ravi', 'deepak', 'tarun', 'male'];
+    const hindiSanskritVoices = voices.filter(
+      (v) =>
+        v.lang.startsWith('hi') ||
+        v.lang.startsWith('sa') ||
+        v.name.toLowerCase().includes('hindi') ||
+        v.name.toLowerCase().includes('sanskrit')
+    );
+
+    // Look for male Hindi voice
+    for (const voice of hindiSanskritVoices) {
+      const n = voice.name.toLowerCase();
+      if (panditMaleKeywords.some((kw) => n.includes(kw))) {
+        return voice;
+      }
+    }
+
+    // 2. Google Hindi or Natural/Online Indian voices
+    const naturalVoice = hindiSanskritVoices.find(
+      (v) => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online')
+    );
+    if (naturalVoice) return naturalVoice;
+
+    // 3. Any Hindi or Sanskrit voice
+    if (hindiSanskritVoices.length > 0) return hindiSanskritVoices[0];
+
+    // 4. Any Indian English voice as fallback
+    const indianVoice = voices.find(
+      (v) => v.lang.includes('IN') || v.name.toLowerCase().includes('india')
+    );
+    if (indianVoice) return indianVoice;
+  }
+
+  // Fallback for other faiths
+  const profile = FAITH_PROFILES[normalizedFaith as FaithType] || FAITH_PROFILES.hinduism;
+  for (const lang of profile.preferredLangs) {
+    const match = voices.find((v) =>
+      v.lang.toLowerCase().replace('_', '-').startsWith(lang.toLowerCase())
+    );
+    if (match) return match;
+  }
+
+  return voices.find((v) => v.lang.startsWith('hi')) || voices[0];
+}
 
 export class SpiritualAmbientSynthesizer {
   private ctx: AudioContext | null = null;

@@ -115,7 +115,7 @@ export default function HomePage() {
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#18130E]/90 border border-[#F59E0B]/40 shadow-sm backdrop-blur-xl">
               <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-ping" />
               <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-[#FEF3C7] uppercase font-sans">
-                Universal Multi-Faith Scriptures • Audio Synced 🎧
+                🪔 दीपोत्सव व छठ महापर्व विशेष • पंडित जी वैदिक श्लोक ऑडियो Synced 🎧
               </span>
             </div>
 
@@ -128,8 +128,8 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed max-w-lg font-sans font-normal">
-              Sabhi dharmo ke mool granth ek hi sthan par. Aawaz ke sath real-time line-by-line
-              highlighting, shuddh Sanskrit/Arabic/Pali ucharan aur certified critical manuscripts.
+              Sabhi dharmo ke mool granth ek hi sthan par. Pandit ji ke shuddh ucharan ke sath real-time line-by-line
+              highlighting, shuddh Sanskrit/Arabic/Pali vani aur certified critical manuscripts.
             </p>
 
             {/* CTAs Row */}
