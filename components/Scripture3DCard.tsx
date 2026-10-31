@@ -246,8 +246,7 @@ export default function Scripture3DCard({
         <div className="flex items-center gap-1.5">
           <a
             href={`/api/download/${book._id || book.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            download
             className="flex-1 py-2 px-3 rounded-xl bg-[#18120C] hover:bg-[#2A1D13] border border-amber-500/40 hover:border-amber-400 text-amber-300 hover:text-white font-bold text-xs transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer"
             title="Download Certified Scripture PDF (पुस्तक PDF डाउनलोड)"
           >
@@ -255,11 +254,12 @@ export default function Scripture3DCard({
             <span>Download PDF (पुस्तक डाउनलोड)</span>
           </a>
 
-          {(book as any).originalPdfUrl && (
+          {(book as any).originalPdfUrl && (book.slug === 'durga-saptashati' || (book as any).originalPdfUrl?.includes('durga-saptashati')) && (
             <a
               href={(book as any).originalPdfUrl}
               target="_blank"
               rel="noopener noreferrer"
+              download="Durga_Saptashati_GeetaPress.pdf"
               className="py-2 px-2.5 rounded-xl bg-[#18120C] hover:bg-[#2A1D13] border border-amber-500/30 text-amber-300 hover:text-amber-100 font-bold text-xs transition flex items-center justify-center cursor-pointer"
               title="मूल गीता प्रेस / प्रामाणिक PDF डाउनलोड करें"
             >

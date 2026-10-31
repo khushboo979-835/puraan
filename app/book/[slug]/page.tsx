@@ -229,25 +229,25 @@ export default function BookDetailsPage() {
             {/* Direct Book PDF Download Button */}
             <a
               href={`/api/download/${book._id || book.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              download
               className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-[#1a0e02] hover:bg-[#351a02] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2 cursor-pointer"
             >
               <Download className="w-4 h-4 text-amber-300" />
               <span>Download PDF (पुस्तक डाउनलोड)</span>
             </a>
 
-            {/* Authentic Geeta Press / Archive Original PDF if available */}
-            {(book.originalPdfUrl || book.slug === 'durga-saptashati') && (
+            {/* Authentic Geeta Press Original PDF (Only for verified Durga Saptashati) */}
+            {(book.slug === 'durga-saptashati' || (book.originalPdfUrl && (book.slug === 'durga-saptashati' || book.originalPdfUrl.includes('durga-saptashati')))) && (
               <a
                 href={book.originalPdfUrl || 'https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf'}
                 target="_blank"
                 rel="noopener noreferrer"
+                download="Durga_Saptashati_GeetaPress.pdf"
                 className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-[#991b1b] hover:bg-[#7f1d1d] text-white font-black text-sm text-center shadow-md transition flex items-center justify-center space-x-2 border border-rose-400 cursor-pointer"
-                title="मूल प्रामाणिक / गीता प्रेस PDF डाउनलोड करें"
+                title="मूल गीता प्रेस प्रामाणिक PDF डाउनलोड करें"
               >
                 <Download className="w-4 h-4 text-amber-300" />
-                <span>मूल प्रामाणिक PDF ↗</span>
+                <span>मूल गीता प्रेस PDF ↗</span>
               </a>
             )}
           </div>

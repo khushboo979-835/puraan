@@ -40,8 +40,8 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
       return NextResponse.json({ error: 'Sacred book not found' }, { status: 404 });
     }
 
-    // 2. If Original Authentic Geeta Press / Archive Edition requested and URL exists, redirect directly
-    if (forceOriginal && (book as any).originalPdfUrl) {
+    // 2. If Original Authentic Geeta Press Edition requested and verified URL exists, redirect directly
+    if (forceOriginal && (book as any).originalPdfUrl && (book.slug === 'durga-saptashati' || (book as any).originalPdfUrl.includes('durga-saptashati'))) {
       return NextResponse.redirect((book as any).originalPdfUrl, 307);
     }
 
@@ -84,13 +84,9 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
     });
   } catch (error: any) {
     console.error('PDF download error:', error);
-    // If generation error occurs, fallback redirect to original PDF URL if available
-    const seedBook = SEED_BOOKS.find(
-      (b) => b.slug === params.bookId || b.slug === params.bookId.toLowerCase()
+    return NextResponse.json(
+      { error: error?.message || 'Failed to generate PDF. Please try again later.' },
+      { status: 500 }
     );
-    if (seedBook && seedBook.originalPdfUrl) {
-      return NextResponse.redirect(seedBook.originalPdfUrl, 307);
-    }
-    return NextResponse.json({ error: error.message || 'Failed to generate PDF' }, { status: 500 });
   }
 }

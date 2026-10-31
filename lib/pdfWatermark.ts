@@ -10,7 +10,13 @@ interface WatermarkOptions {
 function cleanForPdf(text: string): string {
   if (!text) return '';
   // StandardFonts in pdf-lib (Helvetica, TimesRoman) use WinAnsiEncoding (Latin-1 / printable ASCII)
-  return text.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\(\s*-\s*\)/g, '')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s*-\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export async function generateWatermarkedPdf({ userEmail, orderId, book, chapters }: WatermarkOptions): Promise<Uint8Array> {
@@ -182,7 +188,7 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
   // ── 2. CHAPTER & VERSE PAGES ──────────────────────────────────
   if (chapters && chapters.length > 0) {
     for (const chapter of chapters) {
-      const page = pdfDoc.addPage([595.28, 841.89]);
+      let page = pdfDoc.addPage([595.28, 841.89]);
       let currentY = pageHeight - 80;
 
       const safeChapterTitle = cleanForPdf(chapter.title || `Chapter ${chapter.chapterNumber}`);
@@ -214,7 +220,18 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
       if (chapter.verses && chapter.verses.length > 0) {
         for (let i = 0; i < chapter.verses.length; i++) {
           const verse = chapter.verses[i];
-          if (currentY < 120) break; // Keep room for footer watermark
+          if (currentY < 120) {
+            page = pdfDoc.addPage([595.28, 841.89]);
+            currentY = pageHeight - 80;
+            page.drawText(`CHAPTER ${chapter.chapterNumber} (Contd.): ${safeChapterTitle.slice(0, 45)}`, {
+              x: 50,
+              y: currentY,
+              size: 11,
+              font: timesRomanBold,
+              color: rgb(0.7, 0.35, 0.05),
+            });
+            currentY -= 25;
+          }
 
           const safeTranslit = cleanForPdf(verse.transliteration || verse.englishTranslation || '');
           const safeEnglish = cleanForPdf(verse.englishTranslation || '');
