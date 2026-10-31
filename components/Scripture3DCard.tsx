@@ -9,7 +9,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   Sparkles,
-  Play
+  Play,
+  Download
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -216,28 +217,56 @@ export default function Scripture3DCard({
         </div>
       </div>
 
-      {/* Dual CTAs ("Read Verse" and "Listen Vani 🎧") */}
-      <div className="grid grid-cols-2 gap-2 mt-1">
-        <Link
-          href={`/reader/${book.slug}/1`}
-          className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] hover:from-[#FFFFFF] hover:to-[#FBBF24] text-[#0A0908] font-bold text-xs text-center transition flex items-center justify-center space-x-1.5 shadow-md"
-        >
-          <BookOpen className="w-3.5 h-3.5 text-[#0A0908]" />
-          <span>Read Verse</span>
-        </Link>
+      {/* Dual CTAs + PDF Download Action */}
+      <div className="space-y-2 mt-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href={`/reader/${book.slug}/1`}
+            className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#FEF3C7] to-[#F59E0B] hover:from-[#FFFFFF] hover:to-[#FBBF24] text-[#0A0908] font-bold text-xs text-center transition flex items-center justify-center space-x-1.5 shadow-md"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-[#0A0908]" />
+            <span>Read Verse</span>
+          </Link>
 
-        <button
-          onClick={() => {
-            if (onPlayAudio) {
-              onPlayAudio(book);
-            }
-          }}
-          className="py-2.5 px-3 rounded-xl bg-[#1F1710] hover:bg-[#332415] border border-[#F59E0B]/40 text-[#FEF3C7] font-bold text-xs transition flex items-center justify-center space-x-1.5 shadow-sm"
-          title="Listen Vani Audio"
-        >
-          <Volume2 className="w-3.5 h-3.5 text-[#F59E0B]" />
-          <span>Listen Vani 🎧</span>
-        </button>
+          <button
+            onClick={() => {
+              if (onPlayAudio) {
+                onPlayAudio(book);
+              }
+            }}
+            className="py-2.5 px-3 rounded-xl bg-[#1F1710] hover:bg-[#332415] border border-[#F59E0B]/40 text-[#FEF3C7] font-bold text-xs transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer"
+            title="Listen Vani Audio"
+          >
+            <Volume2 className="w-3.5 h-3.5 text-[#F59E0B]" />
+            <span>Listen Vani 🎧</span>
+          </button>
+        </div>
+
+        {/* Direct Scripture PDF Download Action */}
+        <div className="flex items-center gap-1.5">
+          <a
+            href={`/api/download/${book._id || book.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-2 px-3 rounded-xl bg-[#18120C] hover:bg-[#2A1D13] border border-amber-500/40 hover:border-amber-400 text-amber-300 hover:text-white font-bold text-xs transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer"
+            title="Download Certified Scripture PDF (पुस्तक PDF डाउनलोड)"
+          >
+            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <span>Download PDF (पुस्तक डाउनलोड)</span>
+          </a>
+
+          {(book as any).originalPdfUrl && (
+            <a
+              href={(book as any).originalPdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2 px-2.5 rounded-xl bg-[#18120C] hover:bg-[#2A1D13] border border-amber-500/30 text-amber-300 hover:text-amber-100 font-bold text-xs transition flex items-center justify-center cursor-pointer"
+              title="मूल गीता प्रेस / प्रामाणिक PDF डाउनलोड करें"
+            >
+              <span className="text-[10px]">मूल PDF ↗</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import { Book, Chapter, Order, User } from '@/models';
+import { Book, Chapter } from '@/models';
 import { getCurrentUser } from '@/lib/auth';
 import { generateWatermarkedPdf } from '@/lib/pdfWatermark';
 import { SEED_BOOKS } from '@/lib/seedData';
@@ -8,78 +8,70 @@ import { SEED_BOOKS } from '@/lib/seedData';
 export async function GET(req: NextRequest, { params }: { params: { bookId: string } }) {
   try {
     const { bookId } = params;
-    await connectToDatabase();
+    const searchParams = req.nextUrl.searchParams;
+    const forceOriginal = searchParams.get('source') === 'original' || searchParams.get('original') === 'true';
 
-    let user = await getCurrentUser(req);
-    if (!user) {
-      user = await User.findOne({ email: 'seeker@sacredreads.org' });
+    // 1. Identify Scripture (Search Seed Books and Database)
+    let book: any = SEED_BOOKS.find(
+      (b) => b.slug === bookId || b.slug === bookId.toLowerCase() || (b as any)._id === bookId
+    );
+    let chapters: any[] = book ? book.chapters : [];
+
+    try {
+      await connectToDatabase();
+      if (!book) {
+        book = await Book.findById(bookId);
+        if (book) {
+          chapters = await Chapter.find({ bookId: book._id }).sort({ chapterNumber: 1 });
+        }
+      }
+    } catch (dbErr) {
+      // Graceful fallback to SEED_BOOKS if MongoDB Atlas is offline or not whitelisted
+      console.warn('MongoDB connection fallback during download:', dbErr);
     }
-
-    if (!user) {
-      return NextResponse.json({ error: 'Authentication required to download licensed PDF' }, { status: 401 });
-    }
-
-    let book: any = await Book.findById(bookId);
-    let chapters: any[] = [];
 
     if (!book) {
-      // Check if bookId matches a slug or seed book
-      const seedBook = SEED_BOOKS.find((b) => b.slug === bookId || b.title.toLowerCase().includes(bookId.toLowerCase()));
-      if (seedBook) {
-        book = seedBook as any;
-        chapters = seedBook.chapters;
-      } else {
-        return NextResponse.json({ error: 'Sacred book not found' }, { status: 404 });
-      }
-    } else {
-      chapters = await Chapter.find({ bookId: book._id }).sort({ chapterNumber: 1 });
+      // Secondary search in seed books by partial title or slug
+      book = SEED_BOOKS.find((b) => b.title.toLowerCase().includes(bookId.toLowerCase()));
+      if (book) chapters = book.chapters;
     }
 
     if (!book) {
       return NextResponse.json({ error: 'Sacred book not found' }, { status: 404 });
     }
 
-    // Purchase Verification Check:
-    const targetBookId = book._id ? book._id.toString() : bookId;
-    const isPurchased =
-      user.purchasedBooks &&
-      (user.purchasedBooks.some((pId: any) => pId.toString() === targetBookId) ||
-        user.purchasedBooks.some((pId: any) => pId.toString() === bookId));
-
-    const isFreeBook = (book.price || 0) === 0 || book.slug === 'durga-saptashati';
-    if (!isPurchased && !isFreeBook) {
-      return NextResponse.json(
-        {
-          error: 'Forbidden: You do not own a digital license for this scripture.',
-          locked: true,
-          price: book.price || 299,
-        },
-        { status: 403 }
-      );
+    // 2. If Original Authentic Geeta Press / Archive Edition requested and URL exists, redirect directly
+    if (forceOriginal && (book as any).originalPdfUrl) {
+      return NextResponse.redirect((book as any).originalPdfUrl, 307);
     }
 
-    // Find Order ID for watermark stamping
-    const order = await Order.findOne({
-      userId: user._id,
-      bookId: book._id || bookId,
-      status: 'paid',
-    }).sort({ createdAt: -1 });
+    // 3. User Resolution for Watermark
+    let userEmail = 'devout.seeker@gyandharam.com';
+    let orderId = `MAHAPARV-FESTIVE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    const orderId = order ? order.razorpayOrderId : `LIC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    try {
+      const user = await getCurrentUser(req);
+      if (user && user.email) {
+        userEmail = user.email;
+        orderId = `LIC-${user._id?.toString().slice(-6).toUpperCase() || 'USER'}`;
+      }
+    } catch (userErr) {
+      // Continue with default festive seeker watermark
+    }
 
-    // Generate Dynamic Watermarked PDF
+    // 4. Generate Certified Watermarked PDF (100% Free under Diwali & Chhath Puja Mahaparv Offer)
     const pdfBytes = await generateWatermarkedPdf({
-      userEmail: user.email,
+      userEmail,
       orderId,
       book,
       chapters,
     });
 
-    const sanitizedTitle = (book.title || 'Sacred_Scripture')
+    const sanitizedTitle = (book.slug || book.title || 'Sacred_Scripture')
       .replace(/[^a-zA-Z0-9]/g, '_')
       .slice(0, 30);
 
-    const filename = `GyanDharam_${sanitizedTitle}_Watermarked_Licensed.pdf`;
+    const filename = `GyanDharam_${sanitizedTitle}_Certified_Edition.pdf`;
 
     const headers = new Headers();
     headers.set('Content-Type', 'application/pdf');
@@ -91,7 +83,14 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
       headers,
     });
   } catch (error: any) {
-    console.error('PDF watermark generation error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('PDF download error:', error);
+    // If generation error occurs, fallback redirect to original PDF URL if available
+    const seedBook = SEED_BOOKS.find(
+      (b) => b.slug === params.bookId || b.slug === params.bookId.toLowerCase()
+    );
+    if (seedBook && seedBook.originalPdfUrl) {
+      return NextResponse.redirect(seedBook.originalPdfUrl, 307);
+    }
+    return NextResponse.json({ error: error.message || 'Failed to generate PDF' }, { status: 500 });
   }
 }

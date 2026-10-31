@@ -53,9 +53,9 @@ export default function Navbar() {
       <DiwaliChhathBanner />
       <header className="sticky top-0 z-40 bg-[#0A0908]/95 backdrop-blur-2xl border-b border-[#F59E0B]/20 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-16 sm:h-20 gap-4 sm:gap-6">
             {/* Logo & Brand */}
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link href="/" className="flex items-center space-x-3 group flex-shrink-0 mr-4 lg:mr-8 xl:mr-10">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex items-center justify-center border-2 border-amber-400/80 shadow-[0_0_18px_rgba(245,158,11,0.45)] group-hover:shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-105 transition-all bg-[#18130E] flex-shrink-0">
                 <img
                   src="/logo.jpg"
@@ -74,7 +74,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-7 relative">
+            <nav className="hidden lg:flex items-center space-x-5 xl:space-x-7 relative">
               <Link
                 href="/"
                 className={`text-sm transition-all duration-200 ${
@@ -144,24 +144,6 @@ export default function Navbar() {
                 About Us
               </Link>
 
-              {/* Diwali & Chhath Puja Festive Offer Badge */}
-              <button
-                onClick={() => {
-                  const bannerBtn = document.querySelector('button[title*="पूजन विधि"]') as HTMLButtonElement;
-                  if (bannerBtn) bannerBtn.click();
-                  else {
-                    const fallback = document.querySelector('aside button') as HTMLButtonElement;
-                    if (fallback) fallback.click();
-                  }
-                }}
-                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/25 to-amber-500/10 border border-amber-400/50 text-amber-300 hover:text-amber-100 hover:border-amber-400 text-xs font-bold transition shadow-sm hover:scale-105 cursor-pointer"
-                title="शुभ दीपावली एवं छठ महापर्व विशेष ऑफर"
-              >
-                <span className="text-sm">🪔</span>
-                <span>दिवाली-छठ ऑफर</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
-              </button>
-
               {/* Command Palette Trigger (Cmd+K) */}
               <button
                 onClick={() => setCommandPaletteOpen(true)}
@@ -174,7 +156,25 @@ export default function Navbar() {
             </nav>
 
             {/* Right Side Actions */}
-            <div className="hidden md:flex items-center space-x-3.5">
+            <div className="hidden md:flex items-center space-x-3">
+              {/* Diwali & Chhath Puja Festive Offer Badge */}
+              <button
+                onClick={() => {
+                  const bannerBtn = document.querySelector('button[title*="पूजन विधि"]') as HTMLButtonElement;
+                  if (bannerBtn) bannerBtn.click();
+                  else {
+                    const fallback = document.querySelector('aside button') as HTMLButtonElement;
+                    if (fallback) fallback.click();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/25 to-amber-500/10 border border-amber-400/50 text-amber-300 hover:text-amber-100 hover:border-amber-400 text-xs font-bold transition shadow-sm hover:scale-105 cursor-pointer"
+                title="शुभ दीपावली एवं छठ महापर्व विशेष ऑफर"
+              >
+                <span className="text-sm">🪔</span>
+                <span>दिवाली-छठ ऑफर</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+              </button>
+
               {/* Join Sabha / Room ↗ Button Link */}
               <Link
                 href="/sabha"

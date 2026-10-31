@@ -213,6 +213,7 @@ export default function BookDetailsPage() {
 
           {/* Pricing & Unlock Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row flex-wrap items-center gap-3">
+            {/* Primary Reading Link */}
             <Link
               href={`/reader/${book.slug}/1`}
               className="w-full sm:w-auto flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#1a0e02] via-[#351a02] to-[#1a0e02] hover:bg-[#381e04] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2"
@@ -221,46 +222,33 @@ export default function BookDetailsPage() {
               <span>
                 {isFreeBook
                   ? '🔱 Start Free Path (सभी 13 अध्याय निःशुल्क पढ़ें)'
-                  : 'Read Chapter 1 Free (Audio Synced)'}
+                  : 'Read Scripture (Audio Synced)'}
               </span>
             </Link>
 
-            {isFreeBook ? (
-              <>
-                <a
-                  href="https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-[#991b1b] hover:bg-[#7f1d1d] text-white font-black text-sm text-center shadow-md transition flex items-center justify-center space-x-2 border border-rose-400"
-                >
-                  <Download className="w-4 h-4 text-amber-300" />
-                  <span>गीता प्रेस PDF डाउनलोड</span>
-                </a>
-                <a
-                  href="https://instapdf.in/durga-saptashati/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto py-3.5 px-4 rounded-2xl bg-[#fff4d1] hover:bg-[#ffeab0] text-[#000000] font-black text-xs border-2 border-[#784805] transition shadow-xs flex items-center justify-center space-x-1"
-                >
-                  <span>InstaPDF स्रोत ↗</span>
-                </a>
-              </>
-            ) : owned ? (
+            {/* Direct Book PDF Download Button */}
+            <a
+              href={`/api/download/${book._id || book.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-[#1a0e02] hover:bg-[#351a02] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-amber-300" />
+              <span>Download PDF (पुस्तक डाउनलोड)</span>
+            </a>
+
+            {/* Authentic Geeta Press / Archive Original PDF if available */}
+            {(book.originalPdfUrl || book.slug === 'durga-saptashati') && (
               <a
-                href={`/api/download/${book._id}`}
-                className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white font-black text-sm text-center shadow-lg transition flex items-center justify-center space-x-2"
+                href={book.originalPdfUrl || 'https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-[#991b1b] hover:bg-[#7f1d1d] text-white font-black text-sm text-center shadow-md transition flex items-center justify-center space-x-2 border border-rose-400 cursor-pointer"
+                title="मूल प्रामाणिक / गीता प्रेस PDF डाउनलोड करें"
               >
-                <Download className="w-4 h-4" />
-                <span>Download Watermarked PDF</span>
+                <Download className="w-4 h-4 text-amber-300" />
+                <span>मूल प्रामाणिक PDF ↗</span>
               </a>
-            ) : (
-              <button
-                onClick={() => setUnlockModalOpen(true)}
-                className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-[#fff4d1] hover:bg-[#ffeab0] text-[#000000] font-black text-sm border-2 border-[#784805] transition shadow-md flex items-center justify-center space-x-2"
-              >
-                <Lock className="w-4 h-4 text-[#000000]" />
-                <span>Buy Digital Access (₹{book.price})</span>
-              </button>
             )}
           </div>
         </div>

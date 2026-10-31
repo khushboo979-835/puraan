@@ -1,5 +1,4 @@
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
-import { IBook, IChapter } from '@/models';
 
 interface WatermarkOptions {
   userEmail: string;
@@ -8,8 +7,13 @@ interface WatermarkOptions {
   chapters?: any[];
 }
 
+function cleanForPdf(text: string): string {
+  if (!text) return '';
+  // StandardFonts in pdf-lib (Helvetica, TimesRoman) use WinAnsiEncoding (Latin-1 / printable ASCII)
+  return text.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export async function generateWatermarkedPdf({ userEmail, orderId, book, chapters }: WatermarkOptions): Promise<Uint8Array> {
-  // Create a clean, elegant PDF Document
   const pdfDoc = await PDFDocument.create();
   const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
   const timesRomanBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
@@ -17,20 +21,28 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Cover Page
-  const coverPage = pdfDoc.addPage([595.28, 841.89]); // A4 Size in points
+  const safeEmail = cleanForPdf(userEmail || 'seeker@gyandharam.com');
+  const safeOrderId = cleanForPdf(orderId || 'FESTIVE-GIFT-2026');
+  const safeTitle = cleanForPdf(book.title || 'Sacred Scripture');
+  const safeAuthor = cleanForPdf(book.author || 'Ancient Divine Wisdom');
+  const safeReligion = cleanForPdf(book.religion || 'Sacred Tradition');
+  const safeLanguage = cleanForPdf(book.language || 'Sanskrit & Hindi');
+
+  // ── 1. COVER PAGE ──────────────────────────────────────────────
+  const coverPage = pdfDoc.addPage([595.28, 841.89]); // A4 Size
   const { width: pageWidth, height: pageHeight } = coverPage.getSize();
 
-  // Golden / Sandalwood background accent box
+  // Outer Gold Decorative Border
   coverPage.drawRectangle({
     x: 30,
     y: 30,
     width: pageWidth - 60,
     height: pageHeight - 60,
-    borderColor: rgb(0.85, 0.65, 0.13), // Gold border
+    borderColor: rgb(0.85, 0.65, 0.13),
     borderWidth: 2,
   });
 
+  // Inner Subtle Border
   coverPage.drawRectangle({
     x: 36,
     y: 36,
@@ -40,9 +52,9 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
     borderWidth: 0.5,
   });
 
-  // Top header text
-  coverPage.drawText('GYANDHARAM.COM • DIGITAL SACRED SCRIPTURE ARCHIVES', {
-    x: 100,
+  // Top Archive Header
+  coverPage.drawText('GYANDHARAM.COM - DIGITAL SACRED SCRIPTURE ARCHIVES', {
+    x: 80,
     y: pageHeight - 90,
     size: 11,
     font: helveticaBold,
@@ -50,8 +62,8 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
   });
 
   // Religion category
-  coverPage.drawText(`[ Faith Tradition: ${book.religion?.toUpperCase() || 'SACRED SCRIPTURE'} ]`, {
-    x: 170,
+  coverPage.drawText(`[ Faith Tradition: ${safeReligion.toUpperCase()} ]`, {
+    x: 160,
     y: pageHeight - 130,
     size: 12,
     font: timesRomanBold,
@@ -59,33 +71,33 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
   });
 
   // Book Title
-  coverPage.drawText(book.title || 'Sacred Scripture', {
+  coverPage.drawText(safeTitle.slice(0, 45), {
     x: 60,
-    y: pageHeight - 220,
-    size: 26,
+    y: pageHeight - 210,
+    size: 24,
     font: timesRomanBold,
     color: rgb(0.12, 0.1, 0.08),
   });
 
   // Author / Revelation
-  coverPage.drawText(`Revealed By / Sage: ${book.author || 'Ancient Divine Wisdom'}`, {
+  coverPage.drawText(`Sage / Revelation: ${safeAuthor.slice(0, 50)}`, {
     x: 60,
-    y: pageHeight - 260,
-    size: 14,
+    y: pageHeight - 250,
+    size: 13,
     font: timesRomanItalic,
     color: rgb(0.3, 0.25, 0.2),
   });
 
   // Language & Critical Edition
-  coverPage.drawText(`Language: ${book.language || 'Sanskrit & Hindi'} • Authorized Digital Edition`, {
+  coverPage.drawText(`Language: ${safeLanguage} - Certified Digital Edition`, {
     x: 60,
-    y: pageHeight - 290,
+    y: pageHeight - 280,
     size: 11,
     font: helvetica,
     color: rgb(0.4, 0.4, 0.4),
   });
 
-  // Synopsis box
+  // Synopsis / Authenticity Provenance box
   coverPage.drawRectangle({
     x: 60,
     y: pageHeight - 480,
@@ -104,10 +116,11 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
     color: rgb(0.6, 0.3, 0.0),
   });
 
-  const sourceText = book.authenticitySource || 'Verified Critical Edition preserved in sacred repositories.';
-  coverPage.drawText(sourceText.slice(0, 160), {
+  const rawSource = book.authenticitySource || 'Verified Critical Edition preserved in sacred archives with line-by-line vocal synchronization.';
+  const safeSource = cleanForPdf(rawSource);
+  coverPage.drawText(safeSource.slice(0, 240), {
     x: 75,
-    y: pageHeight - 375,
+    y: pageHeight - 380,
     size: 10,
     font: timesRoman,
     color: rgb(0.2, 0.2, 0.2),
@@ -120,7 +133,7 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
     x: 60,
     y: 120,
     width: pageWidth - 120,
-    height: 120,
+    height: 125,
     color: rgb(0.96, 0.98, 0.96),
     borderColor: rgb(0.2, 0.6, 0.3),
     borderWidth: 1.5,
@@ -128,101 +141,114 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
 
   coverPage.drawText('VERIFIED DRM LICENSE CERTIFICATE', {
     x: 75,
-    y: 215,
+    y: 220,
     size: 11,
     font: helveticaBold,
     color: rgb(0.1, 0.45, 0.2),
   });
 
-  coverPage.drawText(`Licensed Digital Copy issued to: ${userEmail}`, {
+  coverPage.drawText(`Licensed Digital Copy issued to: ${safeEmail}`, {
     x: 75,
-    y: 190,
+    y: 195,
     size: 10,
     font: helveticaBold,
     color: rgb(0.1, 0.2, 0.1),
   });
 
-  coverPage.drawText(`Transaction Order ID: ${orderId}`, {
+  coverPage.drawText(`Transaction Order ID: ${safeOrderId}`, {
     x: 75,
-    y: 170,
+    y: 175,
     size: 9,
     font: helvetica,
     color: rgb(0.3, 0.3, 0.3),
   });
 
-  coverPage.drawText(`Timestamp: ${new Date().toISOString()} • Unrestricted Personal Devotional Reading`, {
+  coverPage.drawText(`Timestamp: ${new Date().toISOString()} - Devotional Study Rights`, {
     x: 75,
-    y: 150,
+    y: 155,
     size: 9,
     font: helvetica,
     color: rgb(0.4, 0.4, 0.4),
   });
 
-  // Additional Chapter Pages
+  coverPage.drawText('Authorized by GyanDharam Council for lifetime educational study.', {
+    x: 75,
+    y: 135,
+    size: 8,
+    font: helvetica,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  // ── 2. CHAPTER & VERSE PAGES ──────────────────────────────────
   if (chapters && chapters.length > 0) {
     for (const chapter of chapters) {
       const page = pdfDoc.addPage([595.28, 841.89]);
       let currentY = pageHeight - 80;
 
-      // Chapter Header
-      page.drawText(`CHAPTER ${chapter.chapterNumber}: ${chapter.title.slice(0, 50)}`, {
+      const safeChapterTitle = cleanForPdf(chapter.title || `Chapter ${chapter.chapterNumber}`);
+      page.drawText(`CHAPTER ${chapter.chapterNumber}: ${safeChapterTitle.slice(0, 50)}`, {
         x: 50,
         y: currentY,
-        size: 14,
+        size: 13,
         font: timesRomanBold,
         color: rgb(0.7, 0.35, 0.05),
       });
 
-      currentY -= 30;
+      currentY -= 25;
 
       if (chapter.summary) {
-        page.drawText(`Summary: ${chapter.summary.slice(0, 180)}`, {
+        const safeSummary = cleanForPdf(chapter.summary);
+        page.drawText(`Summary: ${safeSummary.slice(0, 180)}`, {
           x: 50,
           y: currentY,
-          size: 10,
+          size: 9.5,
           font: timesRomanItalic,
-          color: rgb(0.4, 0.4, 0.4),
+          color: rgb(0.35, 0.35, 0.35),
           maxWidth: pageWidth - 100,
-          lineHeight: 14,
+          lineHeight: 13,
         });
-        currentY -= 40;
+        currentY -= 35;
       }
 
       // Verses
       if (chapter.verses && chapter.verses.length > 0) {
         for (let i = 0; i < chapter.verses.length; i++) {
           const verse = chapter.verses[i];
-          if (currentY < 120) {
-            // Add a new page if space runs out
-            break;
-          }
+          if (currentY < 120) break; // Keep room for footer watermark
 
-          page.drawText(`[Verse ${i + 1}]  ${verse.originalScript.slice(0, 100)}`, {
+          const safeTranslit = cleanForPdf(verse.transliteration || verse.englishTranslation || '');
+          const safeEnglish = cleanForPdf(verse.englishTranslation || '');
+
+          page.drawText(`[Verse ${i + 1}] ${safeTranslit.slice(0, 95)}`, {
             x: 50,
             y: currentY,
-            size: 11,
+            size: 10,
             font: timesRomanBold,
             color: rgb(0.1, 0.1, 0.1),
             maxWidth: pageWidth - 100,
           });
-          currentY -= 20;
+          currentY -= 18;
 
-          page.drawText(`Hindi: ${verse.hindiTranslation.slice(0, 140)}`, {
-            x: 50,
-            y: currentY,
-            size: 9.5,
-            font: timesRoman,
-            color: rgb(0.25, 0.25, 0.25),
-            maxWidth: pageWidth - 100,
-            lineHeight: 12,
-          });
-          currentY -= 35;
+          if (safeEnglish) {
+            page.drawText(`Meaning: ${safeEnglish.slice(0, 140)}`, {
+              x: 50,
+              y: currentY,
+              size: 9,
+              font: timesRoman,
+              color: rgb(0.25, 0.25, 0.25),
+              maxWidth: pageWidth - 100,
+              lineHeight: 12,
+            });
+            currentY -= 30;
+          } else {
+            currentY -= 15;
+          }
         }
       }
     }
   }
 
-  // Stamp dynamic DRM watermark on EVERY SINGLE page in the document
+  // ── 3. DYNAMIC DRM WATERMARK ON EVERY PAGE ────────────────────
   const allPages = pdfDoc.getPages();
   const totalPages = allPages.length;
 
@@ -230,7 +256,7 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
     const page = allPages[idx];
     const { width, height } = page.getSize();
 
-    // 1. Footer Watermark Bar
+    // Footer Watermark Bar
     page.drawRectangle({
       x: 0,
       y: 0,
@@ -246,9 +272,9 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
       color: rgb(0.85, 0.65, 0.13),
     });
 
-    // Exact watermark line required by user:
-    // email, order ID, and the text "Licensed Digital Copy"
-    const footerWatermark = `Licensed Digital Copy • ${userEmail} • Order ID: ${orderId} • GyanDharam.com DRM Protected (Page ${idx + 1} of ${totalPages})`;
+    const footerWatermark = cleanForPdf(
+      `Licensed Digital Copy - ${safeEmail} - Order ID: ${safeOrderId} - GyanDharam.com (Page ${idx + 1} of ${totalPages})`
+    );
 
     page.drawText(footerWatermark, {
       x: 30,
@@ -258,14 +284,15 @@ export async function generateWatermarkedPdf({ userEmail, orderId, book, chapter
       color: rgb(0.45, 0.25, 0.05),
     });
 
-    // 2. Subtle translucent diagonal watermark across page body
-    page.drawText(`LICENSED TO ${userEmail.toUpperCase()}`, {
+    // Subtle translucent diagonal watermark across page body
+    const bodyWatermark = cleanForPdf(`LICENSED TO ${safeEmail.toUpperCase()}`);
+    page.drawText(bodyWatermark.slice(0, 40), {
       x: 80,
       y: height / 2 - 40,
-      size: 32,
+      size: 28,
       font: helveticaBold,
       color: rgb(0.88, 0.88, 0.88),
-      opacity: 0.25,
+      opacity: 0.2,
       rotate: degrees(35),
     });
   }

@@ -744,6 +744,18 @@ export default function InteractiveReader({
               <Bookmark className="w-4 h-4" />
             </button>
 
+            {/* Direct PDF Download Button */}
+            <a
+              href={`/api/download/${slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#18130E] hover:bg-[#2A1F13] text-[#FEF3C7] border border-amber-500/40 hover:border-amber-400 text-xs font-bold transition shadow-sm cursor-pointer"
+              title="Download Scripture PDF (पुस्तक PDF डाउनलोड)"
+            >
+              <Download className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden md:inline">PDF</span>
+            </a>
+
             {/* Settings Trigger */}
             <button
               onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}

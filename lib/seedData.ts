@@ -30,6 +30,7 @@ export interface SeedBook {
   featured: boolean;
   authenticitySource: string;
   audioPreviewUrl: string;
+  originalPdfUrl?: string;
   chapters: {
     chapterNumber: number;
     title: string;
@@ -57,6 +58,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Bhandarkar Oriental Research Institute (BORI) Critical Text Edition',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
+    originalPdfUrl: 'https://archive.org/download/shrimad-bhagavad-gita-geeta-press-gorakhpur/Shrimad_Bhagavad_Gita_Hindi.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -138,6 +140,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'King Fahd Glorious Quran Printing Complex Authorized Uthmani Script',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f795cb.mp3',
+    originalPdfUrl: 'https://archive.org/download/Quran_Hindi_Translation/Quran_Hindi.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -219,6 +222,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Ecumenical Standard Biblical Manuscript Archives',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
+    originalPdfUrl: 'https://archive.org/download/HolyBibleHindi/Holy_Bible_Hindi.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -279,6 +283,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Shiromani Gurdwara Parbandhak Committee (SGPC) Standard Script',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    originalPdfUrl: 'https://archive.org/download/JapjiSahibSteekHindi/Japji_Sahib_Steek.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -341,6 +346,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Pali Text Society Standard Canonical Edition',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    originalPdfUrl: 'https://archive.org/download/dhammapada-hindi/Dhammapada_Pali_Hindi.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -403,6 +409,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: false,
     authenticitySource: 'Shrimad Rajchandra Manuscript Archives & Oriental Institute',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    originalPdfUrl: 'https://archive.org/download/tattvartha-sutra-hindi/Tattvartha_Sutra.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -465,6 +472,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Varanasi Sanskrit Mahavidyalaya Critical Manuscript Archive',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    originalPdfUrl: 'https://archive.org/download/agni-puran-geeta-press/Agni_Puran_Part_1.pdf',
     chapters: [
       {
         chapterNumber: 1,
@@ -511,6 +519,7 @@ export const SEED_BOOKS: SeedBook[] = [
     featured: true,
     authenticitySource: 'Geeta Press Gorakhpur (Code 118) & Markandeya Purana Manuscript Edition',
     audioPreviewUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    originalPdfUrl: 'https://archive.org/download/durga-saptashati-geetapress/Durga_Saptashati.pdf',
     chapters: [
       {
         chapterNumber: 1,
