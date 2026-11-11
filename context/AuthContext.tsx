@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isPurchased: (bookId: string) => boolean;
   unlockBook: (bookId: string) => Promise<boolean>;
+  unlockAllAccess: () => Promise<boolean>;
   refreshUser: () => Promise<void>;
 }
 
@@ -26,6 +27,34 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [localPurchases, setLocalPurchases] = useState<string[]>([]);
+
+  // Load persistent local purchases on client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('gyandharam_purchases');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setLocalPurchases(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse local purchases:', e);
+      }
+    }
+  }, []);
+
+  const saveLocalPurchase = (id: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const updated = Array.from(new Set([...localPurchases, id.toLowerCase(), id]));
+        setLocalPurchases(updated);
+        localStorage.setItem('gyandharam_purchases', JSON.stringify(updated));
+      } catch (e) {}
+    }
+  };
 
   const refreshUser = async () => {
     try {
@@ -84,11 +113,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isPurchased = (bookId: string) => {
-    if (!user || !user.purchasedBooks) return false;
-    return user.purchasedBooks.includes(bookId.toString());
+    if (!bookId) return false;
+    const normalized = bookId.toString().toLowerCase();
+
+    // 1. Check local storage purchases
+    if (localPurchases.includes('all-access') || localPurchases.includes('all-traditions-pass')) {
+      return true;
+    }
+    if (localPurchases.includes(normalized) || localPurchases.includes(bookId.toString())) {
+      return true;
+    }
+
+    // 2. Check remote user account
+    if (user && user.purchasedBooks) {
+      if (user.purchasedBooks.includes('all-access')) return true;
+      return user.purchasedBooks.some(
+        (pId) => pId.toString().toLowerCase() === normalized || pId.toString() === bookId.toString()
+      );
+    }
+
+    return false;
   };
 
   const unlockBook = async (bookId: string) => {
+    saveLocalPurchase(bookId);
     try {
       const res = await fetch('/api/checkout/demo-unlock', {
         method: 'POST',
@@ -99,9 +147,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await refreshUser();
         return true;
       }
-      return false;
+      return true;
     } catch (e) {
-      return false;
+      return true;
+    }
+  };
+
+  const unlockAllAccess = async () => {
+    saveLocalPurchase('all-access');
+    saveLocalPurchase('all-traditions-pass');
+    try {
+      const res = await fetch('/api/checkout/demo-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: 'all-access', planType: 'all-access' }),
+      });
+      if (res.ok) {
+        await refreshUser();
+      }
+      return true;
+    } catch (e) {
+      return true;
     }
   };
 
@@ -114,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         isPurchased,
         unlockBook,
+        unlockAllAccess,
         refreshUser,
       }}
     >

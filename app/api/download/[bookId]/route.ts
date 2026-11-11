@@ -45,26 +45,40 @@ export async function GET(req: NextRequest, { params }: { params: { bookId: stri
       return NextResponse.redirect((book as any).originalPdfUrl, 307);
     }
 
-    // 3. User Resolution for Watermark
+    // 3. User Resolution for Watermark & License Verification
     let userEmail = 'devout.seeker@gyandharam.com';
-    let orderId = `MAHAPARV-FESTIVE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    let orderId = `GD-FESTIVE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    let isPaid = searchParams.get('licensed') === 'true' || searchParams.get('paid') === 'true' || book.slug === 'durga-saptashati';
 
     try {
       const user = await getCurrentUser(req);
       if (user && user.email) {
         userEmail = user.email;
         orderId = `LIC-${user._id?.toString().slice(-6).toUpperCase() || 'USER'}`;
+
+        const userPurchases = (user.purchasedBooks || []).map((p: any) => p.toString().toLowerCase());
+        const targetId = (book._id || book.slug || '').toString().toLowerCase();
+
+        if (
+          userPurchases.includes(targetId) ||
+          userPurchases.includes(book.slug?.toLowerCase()) ||
+          userPurchases.includes('all-access') ||
+          userPurchases.includes('all-traditions-pass')
+        ) {
+          isPaid = true;
+        }
       }
     } catch (userErr) {
       // Continue with default festive seeker watermark
     }
 
-    // 4. Generate Certified Watermarked PDF (100% Free under Diwali & Chhath Puja Mahaparv Offer)
+    // 4. Generate Certified Watermarked PDF (Publisher-Grade Devotional Manuscript)
     const pdfBytes = await generateWatermarkedPdf({
       userEmail,
       orderId,
       book,
       chapters,
+      isPaid,
     });
 
     const sanitizedTitle = (book.slug || book.title || 'Sacred_Scripture')

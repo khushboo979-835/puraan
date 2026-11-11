@@ -125,8 +125,54 @@ export function prepareSanskritChantForTTS(script: string): string {
 }
 
 /**
+ * Speak an isolated Sanskrit/sacred word slowly and phonetically for the Pronunciation Trainer (शुद्ध उच्चारण पाठ).
+ * Calibrated to 0.58x rate with dignified Pandit resonance.
+ */
+export function speakIsolatedSanskritWord(
+  word: string,
+  voices: SpeechSynthesisVoice[] = [],
+  faith: string = 'hinduism'
+): void {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+  window.speechSynthesis.cancel();
+  const cleanWord = word.replace(/[।॥,;:\.\?\!]/g, '').trim();
+  if (!cleanWord) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanWord);
+  const voice = getPanditVoice(voices.length > 0 ? voices : window.speechSynthesis.getVoices(), faith);
+  if (voice) utterance.voice = voice;
+
+  utterance.lang = 'hi-IN';
+  utterance.rate = 0.58; // Slower, deliberative phonetic cadence
+  utterance.pitch = 0.76; // Deep reverent resonance
+  utterance.volume = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+/**
+ * Phonetic syllable breakdown helper for Sanskrit & sacred words.
+ */
+export function getWordPhoneticBreakdown(word: string): { original: string; phonetic: string; syllables: string } {
+  const clean = word.replace(/[।॥,;:\.\?\!]/g, '').trim();
+  if (!clean) return { original: '', phonetic: '', syllables: '' };
+
+  // Simple Devanagari syllable separator
+  const syllables = clean
+    .split(/([क-ह]्?[ा-ौंः]?)/g)
+    .filter(Boolean)
+    .join('·');
+
+  return {
+    original: clean,
+    phonetic: clean,
+    syllables: syllables || clean,
+  };
+}
+
+/**
  * Smart voice selector that prioritizes authentic Indian Hindi/Sanskrit male voices
- * (such as Microsoft Hemant, Madhur, Google हिन्दी) so that Sanskrit recitation
  * sounds dignified, natural, and like an authentic temple Pandit.
  */
 export function getPanditVoice(

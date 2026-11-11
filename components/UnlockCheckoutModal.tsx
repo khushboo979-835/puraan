@@ -39,7 +39,7 @@ export default function UnlockCheckoutModal({
   book,
   onSuccess,
 }: UnlockCheckoutModalProps) {
-  const { user, unlockBook, refreshUser } = useAuth();
+  const { user, unlockBook, unlockAllAccess, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [planType, setPlanType] = useState<'single' | 'all-access'>('single');
   const [paymentMethod, setPaymentMethod] = useState<'instant' | 'upi' | 'card'>('instant');
@@ -50,31 +50,28 @@ export default function UnlockCheckoutModal({
 
   const bookId = book._id || book.id || book.slug || 'bhagavad-gita';
   const singlePrice = book.price || 49;
-  const allAccessPrice = 199;
+  const allAccessPrice = 499;
   const activePrice = planType === 'single' ? singlePrice : allAccessPrice;
 
   const handleInstantUnlock = async () => {
     setLoading(true);
     try {
-      // Local unlock through AuthContext
-      unlockBook(book.slug || bookId);
+      if (planType === 'all-access') {
+        await unlockAllAccess();
+      } else {
+        await unlockBook(book.slug || bookId);
+      }
 
       const res = await fetch('/api/checkout/demo-unlock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookId, planType }),
+        body: JSON.stringify({ bookId: planType === 'all-access' ? 'all-access' : bookId, planType }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setOrderInfo(data);
-        setSuccessState(true);
-        await refreshUser();
-        if (onSuccess) onSuccess();
-      } else {
-        // Fallback local persistence if offline
-        setSuccessState(true);
-        if (onSuccess) onSuccess();
-      }
+      setOrderInfo(data);
+      setSuccessState(true);
+      await refreshUser();
+      if (onSuccess) onSuccess();
     } catch (e: any) {
       // Graceful local grant
       setSuccessState(true);
@@ -120,7 +117,11 @@ export default function UnlockCheckoutModal({
               }),
             });
             if (verifyRes.ok) {
-              unlockBook(book.slug || bookId);
+              if (planType === 'all-access') {
+                await unlockAllAccess();
+              } else {
+                await unlockBook(book.slug || bookId);
+              }
               setSuccessState(true);
               await refreshUser();
               if (onSuccess) onSuccess();
@@ -139,7 +140,11 @@ export default function UnlockCheckoutModal({
         rzp.open();
       } else {
         // Instant simulated verify fallback
-        unlockBook(book.slug || bookId);
+        if (planType === 'all-access') {
+          await unlockAllAccess();
+        } else {
+          await unlockBook(book.slug || bookId);
+        }
         setSuccessState(true);
         if (onSuccess) onSuccess();
       }

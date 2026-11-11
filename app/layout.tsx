@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import GyanAiPandit from '@/components/GyanAiPandit';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.gyandharam.com'),
@@ -52,6 +53,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <div className="flex-1">{children}</div>
+          <GyanAiPandit />
           <Footer />
         </AuthProvider>
       </body>

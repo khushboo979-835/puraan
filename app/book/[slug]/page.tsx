@@ -10,10 +10,12 @@ import {
   Download,
   Star,
   BookOpen,
-  Award
+  Award,
+  Printer
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import UnlockCheckoutModal from '@/components/UnlockCheckoutModal';
+import SacredBookPdfModal from '@/components/SacredBookPdfModal';
 import { SEED_BOOKS } from '@/lib/seedData';
 
 export default function BookDetailsPage() {
@@ -26,6 +28,7 @@ export default function BookDetailsPage() {
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const [sacredPdfModalOpen, setSacredPdfModalOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -228,13 +231,23 @@ export default function BookDetailsPage() {
 
             {/* Direct Book PDF Download Button */}
             <a
-              href={`/api/download/${book._id || book.slug}`}
+              href={`/api/download/${book._id || book.slug}${owned ? '?licensed=true' : ''}`}
               download
               className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-[#1a0e02] hover:bg-[#351a02] text-[#ffdc82] font-black text-sm text-center shadow-lg border-2 border-[#784805] transition flex items-center justify-center space-x-2 cursor-pointer"
             >
               <Download className="w-4 h-4 text-amber-300" />
               <span>Download PDF (पुस्तक डाउनलोड)</span>
             </a>
+
+            {/* Sacred Book Publisher PDF Exporter */}
+            <button
+              onClick={() => setSacredPdfModalOpen(true)}
+              className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-[#8B0000] hover:bg-[#A81515] text-white font-black text-sm text-center shadow-lg border-2 border-[#D4AF37] transition flex items-center justify-center space-x-2 cursor-pointer"
+              title="शास्त्र पाण्डुलिपि PDF एक्सपोर्टर"
+            >
+              <Printer className="w-4 h-4 text-amber-300" />
+              <span>शास्त्र पाण्डुलिपि PDF 📜</span>
+            </button>
 
             {/* Authentic Geeta Press Original PDF (Only for verified Durga Saptashati) */}
             {(book.slug === 'durga-saptashati' || (book.originalPdfUrl && (book.slug === 'durga-saptashati' || book.originalPdfUrl.includes('durga-saptashati')))) && (
@@ -365,6 +378,19 @@ export default function BookDetailsPage() {
         onSuccess={() => {
           setUnlockModalOpen(false);
           fetchBookDetails();
+        }}
+      />
+
+      {/* Sacred Book Publisher PDF Exporter Modal */}
+      <SacredBookPdfModal
+        isOpen={sacredPdfModalOpen}
+        onClose={() => setSacredPdfModalOpen(false)}
+        book={book}
+        chapters={book.chapters || []}
+        isUnlocked={owned}
+        onUnlockClick={() => {
+          setSacredPdfModalOpen(false);
+          setUnlockModalOpen(true);
         }}
       />
     </div>

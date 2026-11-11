@@ -41,8 +41,31 @@ export default function ReaderPage() {
 
       if (res.status === 403) {
         const forbiddenData = await res.json();
-        // Chapter is locked behind purchase
         const bookFallback = SEED_BOOKS.find((b) => b.slug === slug);
+        const fallbackChapter = bookFallback?.chapters.find((c) => c.chapterNumber === chapterNumber);
+        const isLocallyUnlocked = isPurchased(slug) || isPurchased(forbiddenData.bookId) || isPurchased('all-access');
+
+        if (isLocallyUnlocked && fallbackChapter) {
+          setData({
+            book: {
+              _id: forbiddenData.bookId || '64f1a2b3c4d5e6f7a8b9c000',
+              title: forbiddenData.bookTitle || bookFallback?.title || 'Sacred Scripture',
+              slug: slug,
+              religion: bookFallback?.religion || 'Sacred Scripture',
+              author: bookFallback?.author || 'Ancient Sage',
+              language: bookFallback?.language || 'Sanskrit & Hindi',
+              totalChapters: bookFallback?.totalChapters || 1,
+              price: forbiddenData.price || bookFallback?.price || 49,
+              coverImageUrl: bookFallback?.coverImageUrl,
+            },
+            chapter: fallbackChapter,
+            locked: false,
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Chapter is locked behind purchase
         setData({
           book: {
             _id: forbiddenData.bookId || '64f1a2b3c4d5e6f7a8b9c000',
@@ -52,14 +75,14 @@ export default function ReaderPage() {
             author: bookFallback?.author || 'Ancient Sage',
             language: bookFallback?.language || 'Sanskrit & Hindi',
             totalChapters: bookFallback?.totalChapters || 1,
-            price: forbiddenData.price || bookFallback?.price || 299,
+            price: forbiddenData.price || bookFallback?.price || 49,
             coverImageUrl: bookFallback?.coverImageUrl,
           },
           chapter: {
             chapterNumber,
             title: `Chapter ${chapterNumber}`,
             audioUrl: '',
-            verses: bookFallback?.chapters.find((c) => c.chapterNumber === chapterNumber)?.verses || [],
+            verses: fallbackChapter?.verses || [],
           },
           locked: true,
         });
@@ -82,11 +105,14 @@ export default function ReaderPage() {
       const seedBook = SEED_BOOKS.find((b) => b.slug === slug);
       if (seedBook) {
         const seedChapter = seedBook.chapters.find((c) => c.chapterNumber === chapterNumber);
-        const isLocked =
-          chapterNumber > 1 &&
-          (seedBook.price || 0) > 0 &&
-          seedBook.slug !== 'durga-saptashati' &&
-          !isPurchased('64f1a2b3c4d5e6f7a8b9c000');
+        const isUnlocked =
+          chapterNumber === 1 ||
+          (seedBook.price || 0) === 0 ||
+          seedBook.slug === 'durga-saptashati' ||
+          isPurchased(slug) ||
+          isPurchased(seedBook.slug) ||
+          isPurchased('all-access') ||
+          isPurchased('64f1a2b3c4d5e6f7a8b9c000');
 
         if (seedChapter) {
           setData({
@@ -95,7 +121,7 @@ export default function ReaderPage() {
               ...seedBook,
             },
             chapter: seedChapter,
-            locked: isLocked,
+            locked: !isUnlocked,
           });
         } else {
           setError(`Chapter ${chapterNumber} not found in this scripture.`);
