@@ -41,6 +41,8 @@ import {
   Server,
   CloudRain,
   Database,
+  Edit3,
+  Save,
 } from 'lucide-react';
 
 const FAITH_OPTIONS = [
@@ -624,7 +626,79 @@ function AdminDashboardContent() {
     }
   };
 
-  // Delete video
+  // Video Edit / Modify State
+  const [editingVideo, setEditingVideo] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editFaith, setEditFaith] = useState('Hinduism');
+  const [editMood, setEditMood] = useState('Morning Prayer');
+  const [editVideoUrl, setEditVideoUrl] = useState('');
+  const [editThumbUrl, setEditThumbUrl] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const handleOpenEditModal = (video: any) => {
+    setEditingVideo(video);
+    setEditTitle(video.title || '');
+    setEditFaith(video.faith || 'Hinduism');
+    setEditMood(video.moodTag || 'Morning Prayer');
+    setEditVideoUrl(video.videoUrl || '');
+    setEditThumbUrl(video.thumbnailUrl || '');
+    setEditIsActive(video.isActive !== false);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVideo) return;
+    setIsSavingEdit(true);
+
+    try {
+      const vidId = editingVideo.id || editingVideo._id;
+      const res = await fetch('/api/admin/status-videos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: vidId,
+          slug: editingVideo.slug,
+          title: editTitle,
+          faith: editFaith,
+          moodTag: editMood,
+          videoUrl: editVideoUrl,
+          thumbnailUrl: editThumbUrl,
+          isActive: editIsActive,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update video');
+      }
+
+      setStatusVideos((prev) =>
+        prev.map((v) =>
+          v.id === vidId || v._id === vidId || v.slug === editingVideo.slug
+            ? {
+                ...v,
+                title: editTitle,
+                faith: editFaith,
+                moodTag: editMood,
+                videoUrl: editVideoUrl,
+                thumbnailUrl: editThumbUrl,
+                isActive: editIsActive,
+              }
+            : v
+        )
+      );
+
+      showToast('Status video modified & synchronized with website!');
+      setEditingVideo(null);
+    } catch (err: any) {
+      showToast(err.message || 'Error updating video', 'error');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Delete video permanently
   const handleDeleteVideo = async (id: string) => {
     if (!confirm('Are you sure you want to permanently delete this status video?')) return;
     try {
@@ -1063,14 +1137,26 @@ function AdminDashboardContent() {
                       )}
                     </button>
 
-                    {/* Delete button */}
-                    <button
-                      onClick={() => handleDeleteVideo(vidId)}
-                      className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-red-950/40 transition-colors"
-                      title="Permanently Delete Status Video"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {/* Edit / Modify button */}
+                      <button
+                        onClick={() => handleOpenEditModal(video)}
+                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+                        title="Edit & Modify Status Video"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={() => handleDeleteVideo(vidId)}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                        title="Permanently Delete Status Video"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1121,6 +1207,146 @@ function AdminDashboardContent() {
                   <span>Download MP4</span>
                 </a>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit / Modify Video Modal */}
+        {editingVideo && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-[#120E0A] border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-amber-500/20">
+                <div className="flex items-center gap-2 text-amber-400">
+                  <Edit3 className="w-5 h-5" />
+                  <h3 className="font-serif font-bold text-base text-white">
+                    Edit & Modify Status Video
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setEditingVideo(null)}
+                  className="p-1 rounded-lg text-stone-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                    Video Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-black border border-amber-500/30 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                      Faith Tradition *
+                    </label>
+                    <select
+                      value={editFaith}
+                      onChange={(e) => setEditFaith(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black border border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400"
+                    >
+                      {FAITH_OPTIONS.map((f) => (
+                        <option key={f} value={f} className="bg-stone-900 text-white">
+                          {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                      Mood Tag *
+                    </label>
+                    <select
+                      value={editMood}
+                      onChange={(e) => setEditMood(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-black border border-amber-500/30 text-amber-200 text-xs focus:outline-none focus:border-amber-400"
+                    >
+                      {MOOD_OPTIONS.map((m) => (
+                        <option key={m} value={m} className="bg-stone-900 text-white">
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                    Video MP4 Stream URL *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={editVideoUrl}
+                    onChange={(e) => setEditVideoUrl(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-black border border-amber-500/30 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                    Poster / Thumbnail URL *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={editThumbUrl}
+                    onChange={(e) => setEditThumbUrl(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-black border border-amber-500/30 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="editIsActive"
+                    checked={editIsActive}
+                    onChange={(e) => setEditIsActive(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-500 bg-black border-amber-500/40"
+                  />
+                  <label htmlFor="editIsActive" className="text-stone-300 text-xs font-medium cursor-pointer">
+                    Active & Visible on Public Website
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-amber-500/15">
+                  <button
+                    type="button"
+                    onClick={() => setEditingVideo(null)}
+                    disabled={isSavingEdit}
+                    className="px-3.5 py-2 rounded-lg border border-stone-700 text-stone-300 hover:text-white text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingEdit}
+                    className="px-5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs shadow-md flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isSavingEdit ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save & Update Video</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

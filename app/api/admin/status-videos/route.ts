@@ -1,181 +1,126 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/db';
-import { StatusVideo } from '@/models';
-import { SEED_STATUS_VIDEOS } from '@/lib/seedStatusVideos';
+import {
+  getAllStatusVideos,
+  createStatusVideo,
+  updateStatusVideo,
+  deleteStatusVideo,
+} from '@/lib/statusVideoService';
 
-let inMemoryVideos = [...SEED_STATUS_VIDEOS];
+export const dynamic = 'force-dynamic';
 
+// GET: Retrieve status videos for Admin (all, or filtered by faith/search)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const faith = searchParams.get('faith');
-    const search = searchParams.get('search');
+    const faith = searchParams.get('faith') || undefined;
+    const search = searchParams.get('search') || undefined;
     const activeOnly = searchParams.get('active') === 'true';
 
-    let dbVideos: any[] = [];
-    let dbConnected = false;
+    const videos = await getAllStatusVideos({
+      faith,
+      search,
+      activeOnly,
+      limit: 100,
+    });
 
-    try {
-      await connectToDatabase();
-      dbConnected = true;
-
-      const query: any = {};
-      if (faith && faith !== 'all') {
-        query.faith = new RegExp(`^${faith}$`, 'i');
-      }
-      if (search) {
-        query.title = { $regex: search, $options: 'i' };
-      }
-      if (activeOnly) {
-        query.isActive = true;
-      }
-
-      dbVideos = await StatusVideo.find(query).sort({ createdAt: -1 }).lean();
-    } catch (e) {
-      console.warn('MongoDB query fallback for status videos');
-    }
-
-    if (!dbConnected || dbVideos.length === 0) {
-      let filtered = [...inMemoryVideos];
-      if (faith && faith !== 'all') {
-        filtered = filtered.filter((v) => v.faith.toLowerCase() === faith.toLowerCase());
-      }
-      if (search) {
-        const s = search.toLowerCase();
-        filtered = filtered.filter((v) => v.title.toLowerCase().includes(s) || v.moodTag.toLowerCase().includes(s));
-      }
-      if (activeOnly) {
-        filtered = filtered.filter((v) => v.isActive);
-      }
-      return NextResponse.json({ success: true, videos: filtered, source: 'seed' });
-    }
-
-    return NextResponse.json({ success: true, videos: dbVideos, source: 'database' });
+    return NextResponse.json({
+      success: true,
+      videos,
+      total: videos.length,
+    });
   } catch (error: any) {
-    console.error('Fetch status videos error:', error);
+    console.error('Admin fetch status videos error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
+// POST: Create / Publish New Status Video
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { title, faith, moodTag, videoUrl, thumbnailUrl, fileSize, duration } = body;
 
     if (!title || !faith || !videoUrl) {
-      return NextResponse.json({ error: 'Title, Faith category, and Video URL are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Title, Faith category, and Video URL are required' },
+        { status: 400 }
+      );
     }
 
-    const slug =
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '') + `-${Date.now().toString(36)}`;
-
-    const newVideoData = {
+    const created = await createStatusVideo({
       title,
-      slug,
       faith,
-      moodTag: moodTag || 'Devotional',
+      moodTag,
       videoUrl,
-      thumbnailUrl:
-        thumbnailUrl ||
-        'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop',
-      fileSize: Number(fileSize) || 4500000,
-      duration: Number(duration) || 30,
-      downloadsCount: 0,
-      viewsCount: 0,
-      likesCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    let createdDb = null;
-    try {
-      await connectToDatabase();
-      createdDb = await StatusVideo.create(newVideoData);
-    } catch (dbErr) {
-      console.warn('DB write fallback for status video');
-    }
-
-    inMemoryVideos.unshift({
-      id: `custom-${Date.now()}`,
-      ...newVideoData,
+      thumbnailUrl,
+      fileSize,
+      duration,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Status video successfully posted & live!',
-      video: createdDb || inMemoryVideos[0],
+      message: 'Status video created and live on website!',
+      video: created,
     });
   } catch (error: any) {
-    console.error('Post status video error:', error);
+    console.error('Admin create status video error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
+// PATCH: Update / Modify Status Video (Title, Faith, Mood, URLs, Active status)
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, slug, isActive, title, moodTag } = body;
+    const { id, slug, title, faith, moodTag, videoUrl, thumbnailUrl, isActive, downloadsCount } = body;
 
-    if (!id && !slug) {
-      return NextResponse.json({ error: 'Video ID or slug required' }, { status: 400 });
+    const target = id || slug;
+    if (!target) {
+      return NextResponse.json({ error: 'Video ID or slug is required for update' }, { status: 400 });
     }
 
-    let updatedDb: any = null;
-    try {
-      await connectToDatabase();
-      const query = id ? { _id: id } : { slug };
-      const updates: any = {};
-      if (typeof isActive === 'boolean') updates.isActive = isActive;
-      if (title) updates.title = title;
-      if (moodTag) updates.moodTag = moodTag;
+    const updates: any = {};
+    if (typeof title === 'string') updates.title = title.trim();
+    if (faith) updates.faith = faith;
+    if (typeof moodTag === 'string') updates.moodTag = moodTag.trim();
+    if (typeof videoUrl === 'string') updates.videoUrl = videoUrl.trim();
+    if (typeof thumbnailUrl === 'string') updates.thumbnailUrl = thumbnailUrl.trim();
+    if (typeof isActive === 'boolean') updates.isActive = isActive;
+    if (typeof downloadsCount === 'number') updates.downloadsCount = downloadsCount;
 
-      updatedDb = await StatusVideo.findOneAndUpdate(query, { $set: updates }, { new: true });
-    } catch (e) {}
-
-    // Update in-memory
-    const idx = inMemoryVideos.findIndex((v) => v.id === id || v.slug === slug);
-    if (idx !== -1) {
-      if (typeof isActive === 'boolean') inMemoryVideos[idx].isActive = isActive;
-      if (title) inMemoryVideos[idx].title = title;
-      if (moodTag) inMemoryVideos[idx].moodTag = moodTag;
-    }
+    const updated = await updateStatusVideo(target, updates);
 
     return NextResponse.json({
       success: true,
-      message: 'Status updated successfully',
-      video: updatedDb || (idx !== -1 ? inMemoryVideos[idx] : null),
+      message: 'Status video updated and synchronized successfully!',
+      video: updated,
     });
   } catch (error: any) {
+    console.error('Admin update status video error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
+// DELETE: Delete Status Video Permanently
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     const slug = searchParams.get('slug');
 
-    if (!id && !slug) {
-      return NextResponse.json({ error: 'Video ID or slug required' }, { status: 400 });
+    const target = id || slug;
+    if (!target) {
+      return NextResponse.json({ error: 'Video ID or slug is required for deletion' }, { status: 400 });
     }
 
-    try {
-      await connectToDatabase();
-      if (id) await StatusVideo.findByIdAndDelete(id);
-      else if (slug) await StatusVideo.findOneAndDelete({ slug });
-    } catch (e) {}
-
-    inMemoryVideos = inMemoryVideos.filter((v) => v.id !== id && v.slug !== slug);
+    await deleteStatusVideo(target);
 
     return NextResponse.json({
       success: true,
-      message: 'Status video removed successfully',
+      message: 'Status video deleted permanently from system and website!',
     });
   } catch (error: any) {
+    console.error('Admin delete status video error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
