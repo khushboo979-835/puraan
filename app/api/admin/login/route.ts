@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models';
-import { comparePassword, hashPassword, signJwtToken } from '@/lib/auth';
+import { comparePassword, hashPassword, signJwtToken, verifyJwtToken } from '@/lib/auth';
 
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@gyandharam.com';
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'GyanAdmin@2026';
@@ -104,6 +104,35 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Admin login error:', error);
     return NextResponse.json({ error: error.message || 'Authentication error' }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const tokenCookie = req.cookies.get('sacred_auth_token');
+    const authHeader = req.headers.get('authorization');
+    const token = tokenCookie?.value || (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null);
+
+    if (!token) {
+      return NextResponse.json({ authenticated: false, error: 'No admin token found' }, { status: 401 });
+    }
+
+    const payload = verifyJwtToken(token);
+    if (!payload || payload.role !== 'admin') {
+      return NextResponse.json({ authenticated: false, error: 'Invalid or expired administrative credentials' }, { status: 401 });
+    }
+
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: payload.userId,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+      },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ authenticated: false, error: err.message }, { status: 401 });
   }
 }
 

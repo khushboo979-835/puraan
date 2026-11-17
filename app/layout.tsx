@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import GyanAiPandit from '@/components/GyanAiPandit';
+import AppShell from '@/components/AppShell';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.gyandharam.com'),
@@ -51,10 +49,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#0b0d13] text-[#f3ede2] min-h-screen flex flex-col selection:bg-amber-500 selection:text-stone-950">
         <AuthProvider>
-          <Navbar />
-          <div className="flex-1">{children}</div>
-          <GyanAiPandit />
-          <Footer />
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>
