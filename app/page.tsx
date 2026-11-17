@@ -27,6 +27,7 @@ import AudioStudioDrawer from '@/components/AudioStudioDrawer';
 import UnlockCheckoutModal from '@/components/UnlockCheckoutModal';
 import Scripture3DCard from '@/components/Scripture3DCard';
 import FAQSection from '@/components/FAQSection';
+import StatusVideosSection from '@/components/StatusVideosSection';
 
 interface FaithPortalInfo {
   id: string;
@@ -295,6 +296,9 @@ export default function HomePage() {
           })}
         </div>
       </section>
+
+      {/* ── DAILY DEVOTIONAL STATUS VIDEOS & REELS SECTION ─────────── */}
+      <StatusVideosSection />
 
       {/* ── INTERACTIVE FAQ SECTION ──────────────────────────────── */}
       <FAQSection />

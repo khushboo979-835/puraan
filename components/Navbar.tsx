@@ -18,7 +18,8 @@ import {
   LogOut,
   Headphones,
   BookOpen,
-  Info
+  Info,
+  Film
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import MegaMenu from '@/components/MegaMenu';
@@ -116,6 +117,22 @@ export default function Navbar() {
               >
                 <span>Interactive Audio (Vani)</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-ping" />
+              </Link>
+
+              {/* Status Videos (रील्स) URL Link */}
+              <Link
+                href="/status-videos"
+                className={`text-sm transition-all duration-200 flex items-center gap-1.5 font-medium ${
+                  pathname === '/status-videos'
+                    ? 'text-[#FEF3C7] font-bold text-shadow-gold'
+                    : 'text-stone-300 hover:text-[#F59E0B]'
+                }`}
+              >
+                <Film className="w-3.5 h-3.5 text-amber-400" />
+                <span>Status Videos</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 px-1.5 py-0.2 rounded-full">
+                  Reels
+                </span>
               </Link>
 
               {/* My Shelf URL Link */}
@@ -260,6 +277,20 @@ export default function Navbar() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#120F0C] border-b border-stone-800 px-4 pt-2 pb-6 space-y-2 text-stone-200">
+            <Link
+              href="/status-videos"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25"
+            >
+              <div className="flex items-center gap-2">
+                <Film className="w-4 h-4 text-amber-400" />
+                <span>Status Videos & Reels (रील्स)</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500 text-stone-950">
+                4K MP4
+              </span>
+            </Link>
+
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
