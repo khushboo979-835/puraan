@@ -115,7 +115,7 @@ export default function HomePage() {
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#18130E]/90 border border-[#F59E0B]/40 shadow-sm backdrop-blur-xl">
               <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-ping" />
               <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-[#FEF3C7] uppercase font-sans">
-                🪔 दीपोत्सव व छठ महापर्व विशेष • पंडित जी वैदिक श्लोक ऑडियो Synced 🎧
+                🪔 ज्ञानधर्म सर्वग्रन्थ संग्रह • पंडित जी वैदिक श्लोक ऑडियो Synced 🎧
               </span>
             </div>
 
