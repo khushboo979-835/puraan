@@ -25,6 +25,7 @@ import {
   Server,
   Activity,
   UserCheck,
+  QrCode,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -192,10 +193,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         {
           id: 'orders',
-          label: 'Orders & Revenue',
+          label: 'Orders & UTR Verification',
           icon: ShoppingBag,
           href: '/admin?tab=orders',
-          desc: 'Razorpay UPI & Pass Access',
+          desc: '12-Digit UTR Approvals & Sales',
+        },
+        {
+          id: 'payments',
+          label: 'Payment & QR Settings',
+          icon: QrCode,
+          href: '/admin?tab=payments',
+          desc: 'PhonePe QR & UPI Merchant',
         },
       ],
     },

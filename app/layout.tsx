@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { AudioSanctuaryProvider } from '@/context/AudioSanctuaryContext';
 import AppShell from '@/components/AppShell';
 
 export const metadata: Metadata = {
@@ -49,7 +50,9 @@ export default function RootLayout({
       </head>
       <body className="bg-[#0b0d13] text-[#f3ede2] min-h-screen flex flex-col selection:bg-amber-500 selection:text-stone-950">
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <AudioSanctuaryProvider>
+            <AppShell>{children}</AppShell>
+          </AudioSanctuaryProvider>
         </AuthProvider>
       </body>
     </html>

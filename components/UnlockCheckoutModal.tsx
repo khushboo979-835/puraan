@@ -16,6 +16,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import UpiScannerModal from '@/components/UpiScannerModal';
 
 interface UnlockCheckoutModalProps {
   isOpen: boolean;
@@ -42,7 +43,8 @@ export default function UnlockCheckoutModal({
   const { user, unlockBook, unlockAllAccess, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [planType, setPlanType] = useState<'single' | 'all-access'>('single');
-  const [paymentMethod, setPaymentMethod] = useState<'instant' | 'upi' | 'card'>('instant');
+  const [paymentMethod, setPaymentMethod] = useState<'instant' | 'upi' | 'card'>('upi');
+  const [showUpiScanner, setShowUpiScanner] = useState(false);
   const [successState, setSuccessState] = useState(false);
   const [orderInfo, setOrderInfo] = useState<any>(null);
 
@@ -339,26 +341,51 @@ export default function UnlockCheckoutModal({
 
             {/* Action Trigger */}
             <button
-              onClick={paymentMethod === 'instant' ? handleInstantUnlock : handleRazorpayCheckout}
+              onClick={() => {
+                if (paymentMethod === 'upi') {
+                  setShowUpiScanner(true);
+                } else if (paymentMethod === 'instant') {
+                  handleInstantUnlock();
+                } else {
+                  handleRazorpayCheckout();
+                }
+              }}
               disabled={loading}
-              className="btn-gold-glow w-full py-3.5 px-6 font-bold rounded-2xl text-xs sm:text-sm text-[#0A0908] shadow-xl flex items-center justify-center space-x-2 transition hover:scale-[1.02] disabled:opacity-50"
+              className="btn-gold-glow w-full py-3.5 px-6 font-bold rounded-2xl text-xs sm:text-sm text-[#0A0908] shadow-xl flex items-center justify-center space-x-2 transition hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
             >
               <span>
                 {loading
                   ? 'Authorizing License...'
                   : paymentMethod === 'instant'
                   ? `Instant 1-Click Unlock (₹${activePrice}) ⚡`
-                  : `Pay ₹${activePrice} via ${paymentMethod.toUpperCase()} ↗`}
+                  : paymentMethod === 'upi'
+                  ? `Scan PhonePe QR & Pay ₹${activePrice} 📲`
+                  : `Pay ₹${activePrice} via Card / NetBanking ↗`}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
             <p className="text-[10px] text-center text-stone-400 mt-3">
-              100% money-back satisfaction guarantee • Encrypted via Razorpay
+              Direct PhonePe UPI QR scanner with 12-digit UTR instant verification • 100% Secure
             </p>
           </div>
         )}
       </div>
+
+      {/* Official PhonePe Merchant Scanner Modal */}
+      {showUpiScanner && (
+        <UpiScannerModal
+          isOpen={showUpiScanner}
+          onClose={() => setShowUpiScanner(false)}
+          book={book}
+          initialPlanType={planType}
+          onSuccess={() => {
+            setShowUpiScanner(false);
+            setSuccessState(true);
+            if (onSuccess) onSuccess();
+          }}
+        />
+      )}
     </div>
   );
 }

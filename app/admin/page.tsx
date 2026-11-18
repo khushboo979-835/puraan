@@ -43,6 +43,9 @@ import {
   Database,
   Edit3,
   Save,
+  QrCode,
+  Copy,
+  Smartphone,
 } from 'lucide-react';
 
 const FAITH_OPTIONS = [
@@ -76,6 +79,13 @@ function AdminDashboardContent() {
   const [scriptures, setScriptures] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [r2Config, setR2Config] = useState<any>(null);
+  const [paymentSettings, setPaymentSettings] = useState<any>({
+    merchantName: 'UJJWAL KUMAR',
+    merchantUpiId: 'ujjwalkumar@phonepe',
+    qrImageUrl: '/uploads/phonepe-qr.jpg',
+    singleGranthPrice: 49,
+    annualPassPrice: 499,
+  });
 
   // Notifications
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -124,6 +134,15 @@ function AdminDashboardContent() {
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         setOrders(ordersData.orders || []);
+      }
+
+      // Fetch Payment Settings
+      const paymentRes = await fetch('/api/payment-settings');
+      if (paymentRes.ok) {
+        const paymentData = await paymentRes.json();
+        if (paymentData.settings) {
+          setPaymentSettings(paymentData.settings);
+        }
       }
     } catch (err: any) {
       console.error('Error loading admin data:', err);
@@ -1788,22 +1807,62 @@ function AdminDashboardContent() {
   // -------------------------------------------------------------
   const [orderFilterStatus, setOrderFilterStatus] = useState('all');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const filteredOrders = orders.filter((o) => {
-    const matchStatus = orderFilterStatus === 'all' || o.status.toLowerCase() === orderFilterStatus.toLowerCase();
+    const s = o.status ? o.status.toLowerCase() : 'pending';
+    const matchStatus =
+      orderFilterStatus === 'all' ||
+      s === orderFilterStatus.toLowerCase() ||
+      (orderFilterStatus === 'paid' && (s === 'paid' || s === 'approved'));
+
+    const searchLower = orderSearchTerm.toLowerCase();
     const matchSearch =
       !orderSearchTerm ||
-      o.customerName?.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
-      o.customerEmail?.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
-      o.itemTitle?.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
-      o.id?.toLowerCase().includes(orderSearchTerm.toLowerCase());
+      o.customerName?.toLowerCase().includes(searchLower) ||
+      o.customerEmail?.toLowerCase().includes(searchLower) ||
+      o.userEmail?.toLowerCase().includes(searchLower) ||
+      o.itemTitle?.toLowerCase().includes(searchLower) ||
+      o.utrNumber?.toLowerCase().includes(searchLower) ||
+      o.id?.toLowerCase().includes(searchLower);
     return matchStatus && matchSearch;
   });
 
   const totalCalculatedRevenue = orders.reduce(
-    (acc, o) => acc + (o.status === 'paid' ? o.amount : 0),
+    (acc, o) => acc + (o.status === 'paid' || o.status === 'approved' ? o.amount : 0),
     0
   );
+
+  const pendingUtrCount = orders.filter((o) => o.status === 'pending').length;
+
+  const handleUpdateOrderStatus = async (orderId: string, status: 'approved' | 'rejected') => {
+    setUpdatingOrderId(orderId);
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(
+          status === 'approved'
+            ? '✓ Order Approved & Scripture Unlocked!'
+            : 'Order has been Rejected',
+          status === 'approved' ? 'success' : 'error'
+        );
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+        );
+      } else {
+        showToast(data.error || 'Failed to update order status', 'error');
+      }
+    } catch (err: any) {
+      showToast('Error updating order: ' + err.message, 'error');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
 
   const renderOrdersTab = () => {
     return (
@@ -1813,10 +1872,10 @@ function AdminDashboardContent() {
           <div>
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-white flex items-center gap-2">
               <ShoppingBag className="w-6 h-6 text-amber-400" />
-              <span>Orders & Revenue Sanctuary</span>
+              <span>Orders & 12-Digit UTR Verification</span>
             </h2>
             <p className="text-xs text-amber-200/60 mt-0.5">
-              Live tracking of Single Granth purchases (₹49), Annual Passes (₹499), and customer settlement status.
+              Live tracking of PhonePe UPI QR scanner payments, 12-digit UTR approval queue, and customer licenses.
             </p>
           </div>
         </div>
@@ -1837,28 +1896,33 @@ function AdminDashboardContent() {
 
           <div className="p-5 rounded-2xl bg-[#120E0A] border border-amber-500/25">
             <span className="text-xs text-stone-400 uppercase tracking-wider block">
-              Completed Orders
+              Pending UTR Verifications
             </span>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-white mt-1">
-              {orders.filter((o) => o.status === 'paid').length || orders.length}
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-amber-300 mt-1 flex items-center gap-2">
+              <span>{pendingUtrCount}</span>
+              {pendingUtrCount > 0 && (
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-stone-950 px-2 py-0.5 rounded-full">
+                  Action Needed
+                </span>
+              )}
             </div>
-            <p className="text-xs text-stone-400 mt-1">Instant digital delivery confirmed</p>
+            <p className="text-xs text-stone-400 mt-1">12-digit PhonePe UPI reference reviews</p>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#120E0A] border border-amber-500/25">
             <span className="text-xs text-stone-400 uppercase tracking-wider block">
-              Average Order Value (AOV)
+              Completed Orders
             </span>
             <div className="text-2xl sm:text-3xl font-serif font-bold text-white mt-1">
-              ₹142
+              {orders.filter((o) => o.status === 'paid' || o.status === 'approved').length || orders.length}
             </div>
-            <p className="text-xs text-stone-400 mt-1">Driven by Annual Sacred Pass upgrades</p>
+            <p className="text-xs text-stone-400 mt-1">Instant digital delivery confirmed</p>
           </div>
         </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#120E0A] p-4 rounded-xl border border-amber-500/20">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setOrderFilterStatus('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
@@ -1870,6 +1934,17 @@ function AdminDashboardContent() {
               All Purchases ({orders.length})
             </button>
             <button
+              onClick={() => setOrderFilterStatus('pending')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+                orderFilterStatus === 'pending'
+                  ? 'bg-amber-500 text-stone-950 font-bold'
+                  : 'text-amber-300 bg-amber-950/40 border border-amber-500/30'
+              }`}
+            >
+              <span>Pending UTR ({pendingUtrCount})</span>
+              {pendingUtrCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
+            </button>
+            <button
               onClick={() => setOrderFilterStatus('paid')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
                 orderFilterStatus === 'paid'
@@ -1877,17 +1952,27 @@ function AdminDashboardContent() {
                   : 'text-stone-400 bg-black/40'
               }`}
             >
-              Paid
+              Approved / Paid
+            </button>
+            <button
+              onClick={() => setOrderFilterStatus('rejected')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                orderFilterStatus === 'rejected'
+                  ? 'bg-amber-500 text-stone-950 font-bold'
+                  : 'text-stone-400 bg-black/40'
+              }`}
+            >
+              Rejected
             </button>
           </div>
 
-          <div className="relative min-w-[220px]">
+          <div className="relative min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/60" />
             <input
               type="text"
               value={orderSearchTerm}
               onChange={(e) => setOrderSearchTerm(e.target.value)}
-              placeholder="Search customer email or order..."
+              placeholder="Search email, UTR, or order..."
               className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-black/60 border border-amber-500/30 text-white placeholder-stone-500 text-xs focus:outline-none focus:border-amber-400"
             />
           </div>
@@ -1903,46 +1988,118 @@ function AdminDashboardContent() {
                   <th className="py-3 px-4">Devout Customer</th>
                   <th className="py-3 px-4">Scripture / Plan</th>
                   <th className="py-3 px-4">Amount</th>
-                  <th className="py-3 px-4">Payment Method</th>
+                  <th className="py-3 px-4">12-Digit UTR Number</th>
                   <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Action</th>
                   <th className="py-3 px-4">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-500/10">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-amber-500/5 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-semibold text-amber-400">
-                      {order.id}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-white">{order.customerName}</div>
-                      <div className="text-[11px] text-stone-400 font-mono">{order.customerEmail}</div>
-                    </td>
-                    <td className="py-3.5 px-4 text-stone-200">
-                      <span className="font-medium">{order.itemTitle}</span>
-                      <span className="block text-[10px] text-amber-300/70">{order.category}</span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-white">
-                      ₹{order.amount}
-                    </td>
-                    <td className="py-3.5 px-4 text-stone-300">
-                      {order.paymentMethod || 'Razorpay UPI'}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-stone-400 font-mono text-[11px]">
-                      {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-stone-500">
+                      No orders found matching this filter.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredOrders.map((order) => {
+                    const email = order.userEmail || order.customerEmail || 'seeker@gyandharam.com';
+                    const name = order.customerName || email.split('@')[0];
+                    const isPending = order.status === 'pending';
+                    const isApproved = order.status === 'approved' || order.status === 'paid';
+                    const isRejected = order.status === 'rejected';
+
+                    return (
+                      <tr key={order.id} className="hover:bg-amber-500/5 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-semibold text-amber-400">
+                          {order.id}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-white">{name}</div>
+                          <div className="text-[11px] text-stone-400 font-mono">{email}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-stone-200">
+                          <span className="font-medium">{order.itemTitle || order.scriptureSlug}</span>
+                          <span className="block text-[10px] text-amber-300/70">
+                            {order.amount >= 499 ? 'Annual All-Access Pass' : 'Single Granth'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-white">
+                          ₹{order.amount}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {order.utrNumber ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 font-mono font-bold">
+                              <span>{order.utrNumber}</span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(order.utrNumber);
+                                  showToast('UTR Number copied to clipboard!');
+                                }}
+                                title="Copy UTR"
+                                className="text-amber-400 hover:text-white"
+                              >
+                                <Copy className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-stone-500 font-mono text-[11px]">Instant Razorpay</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {isApproved && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/40">
+                              <CheckCircle2 className="w-3 h-3" /> Approved
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                              Pending UTR
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/40">
+                              <AlertCircle className="w-3 h-3" /> Rejected
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {isPending ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleUpdateOrderStatus(order.id, 'approved')}
+                                disabled={updatingOrderId === order.id}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow transition disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                                title="Approve payment and unlock scripture"
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>Approve</span>
+                              </button>
+                              <button
+                                onClick={() => handleUpdateOrderStatus(order.id, 'rejected')}
+                                disabled={updatingOrderId === order.id}
+                                className="px-2 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-300 font-semibold text-[11px] transition disabled:opacity-50 cursor-pointer"
+                                title="Reject invalid UTR"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-stone-500 text-[11px]">Settled</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-stone-400 font-mono text-[11px]">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -1952,7 +2109,196 @@ function AdminDashboardContent() {
   };
 
   // -------------------------------------------------------------
-  // TAB 5: STORAGE & R2 SETTINGS COMPONENT
+  // TAB 5: PAYMENT & QR SETTINGS COMPONENT
+  // -------------------------------------------------------------
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [merchantNameInput, setMerchantNameInput] = useState(
+    paymentSettings?.merchantName || 'UJJWAL KUMAR'
+  );
+  const [merchantUpiIdInput, setMerchantUpiIdInput] = useState(
+    paymentSettings?.merchantUpiId || 'ujjwalkumar@phonepe'
+  );
+  const [qrImageUrlInput, setQrImageUrlInput] = useState(
+    paymentSettings?.qrImageUrl || '/uploads/phonepe-qr.jpg'
+  );
+
+  const handleSavePaymentSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPayment(true);
+    try {
+      const res = await fetch('/api/payment-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchantName: merchantNameInput,
+          merchantUpiId: merchantUpiIdInput,
+          qrImageUrl: qrImageUrlInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPaymentSettings(data.settings);
+        showToast('✓ Payment & Official PhonePe QR Settings Saved Successfully!');
+      } else {
+        showToast(data.error || 'Failed to save settings', 'error');
+      }
+    } catch (err: any) {
+      showToast('Error saving payment settings: ' + err.message, 'error');
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const renderPaymentsTab = () => {
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/20">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-white flex items-center gap-2">
+              <QrCode className="w-6 h-6 text-amber-400" />
+              <span>Payment & Official PhonePe QR Settings</span>
+            </h2>
+            <p className="text-xs text-amber-200/60 mt-0.5">
+              Manage your direct merchant PhonePe QR scanner, beneficiary name, and 12-digit UTR verification parameters.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Active QR Code Preview Card */}
+          <div className="lg:col-span-5 p-6 rounded-2xl bg-[#120E0A] border-2 border-amber-500/40 shadow-2xl space-y-4 text-center">
+            <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <Smartphone className="w-4 h-4 text-amber-400" />
+                Live Customer Scanner Preview
+              </span>
+              <span className="text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                ACTIVE
+              </span>
+            </div>
+
+            {/* Official PhonePe Image Preview */}
+            <div className="max-w-[280px] mx-auto rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-[0_0_25px_rgba(245,158,11,0.25)] bg-black p-2">
+              <img
+                src={qrImageUrlInput || '/uploads/phonepe-qr.jpg'}
+                alt="Official PhonePe Merchant QR - Ujjwal Kumar"
+                className="w-full h-auto object-contain rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="font-heading font-black text-lg text-white">
+                {merchantNameInput || 'UJJWAL KUMAR'}
+              </h4>
+              <p className="text-xs text-amber-300 font-mono">
+                {merchantUpiIdInput || 'ujjwalkumar@phonepe'}
+              </p>
+            </div>
+
+            <div className="p-3 bg-black/60 rounded-xl border border-amber-500/20 text-left text-xs space-y-1.5 text-stone-300">
+              <div className="flex justify-between">
+                <span className="text-stone-500">Asset File:</span>
+                <span className="font-mono text-amber-400 truncate max-w-[180px]">
+                  {qrImageUrlInput}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500">Accepted Apps:</span>
+                <span className="text-white font-semibold">PhonePe, GPay, Paytm, BHIM</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500">Verification:</span>
+                <span className="text-emerald-400 font-bold">12-Digit Numeric UTR</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Form */}
+          <div className="lg:col-span-7 p-6 rounded-2xl bg-[#120E0A] border border-amber-500/30 shadow-xl space-y-6">
+            <div className="border-b border-amber-500/20 pb-3">
+              <h3 className="font-serif font-bold text-base text-white">
+                Merchant Profile & Verification Controls
+              </h3>
+              <p className="text-xs text-stone-400 mt-0.5">
+                These credentials display in all customer purchase modals (₹49 Single Granth / ₹499 Annual Pass).
+              </p>
+            </div>
+
+            <form onSubmit={handleSavePaymentSettings} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                  Merchant / Beneficiary Name *
+                </label>
+                <input
+                  type="text"
+                  value={merchantNameInput}
+                  onChange={(e) => setMerchantNameInput(e.target.value)}
+                  placeholder="e.g., UJJWAL KUMAR"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-amber-500/40 text-white font-bold focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                  Official Merchant UPI ID (VPA) *
+                </label>
+                <input
+                  type="text"
+                  value={merchantUpiIdInput}
+                  onChange={(e) => setMerchantUpiIdInput(e.target.value)}
+                  placeholder="e.g., ujjwalkumar@phonepe"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-amber-500/40 text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                  Active QR Code Image URL *
+                </label>
+                <input
+                  type="text"
+                  value={qrImageUrlInput}
+                  onChange={(e) => setQrImageUrlInput(e.target.value)}
+                  placeholder="/uploads/phonepe-qr.jpg"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-amber-500/40 text-stone-200 font-mono focus:outline-none focus:border-amber-400"
+                />
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Default: <code className="text-amber-400 font-mono">/uploads/phonepe-qr.jpg</code> (PhonePe verified image for Ujjwal Kumar).
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={savingPayment}
+                  className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+                >
+                  {savingPayment ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Saving Merchant Details...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save Payment & QR Configuration</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // -------------------------------------------------------------
+  // TAB 6: STORAGE & R2 SETTINGS COMPONENT
   // -------------------------------------------------------------
   const [testingR2, setTestingR2] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
@@ -2122,6 +2468,7 @@ function AdminDashboardContent() {
       {activeTab === 'videos' && renderVideosTab()}
       {activeTab === 'scriptures' && renderScripturesTab()}
       {activeTab === 'orders' && renderOrdersTab()}
+      {activeTab === 'payments' && renderPaymentsTab()}
       {activeTab === 'storage' && renderStorageTab()}
     </div>
   );
